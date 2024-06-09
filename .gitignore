@@ -1,3 +1,6 @@
+
+run.ps1 run.sh run.cmd run.bat
+
 *.swp
 *.*~
 project.lock.json
