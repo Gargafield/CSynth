@@ -5,6 +5,7 @@ namespace CSynth.Analysis;
 public class Node
 {
     public Dictionary<Node, Edge> Edges { get; set; } = new ();
+    public List<Node> Outgoing => Edges.Values.Select(e => e.To).ToList();
 }
 
 public class EntryNode : Node
@@ -26,4 +27,10 @@ public class BlockNode : Node {
     public List<Instruction> Instructions { get; set; } = new ();
 
     public override string ToString() => "Block";
+}
+
+public class BranchNode : BlockNode {
+    public Node Target => Outgoing.OfType<TargetNode>().Single();
+
+    public override string ToString() => "Branch";
 }

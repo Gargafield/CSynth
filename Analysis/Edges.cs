@@ -1,9 +1,11 @@
 
 namespace CSynth.Analysis;
 
-public class Edge
+public abstract class Edge
 {
-    public required Node From { get; set; }
-    public required Node To { get; set; }
+    public Node From { get; set; } = null!;
+    public Node To { get; set; } = null!;
 }
 
+public class ConditionalEdge : Edge { }
+public class FallthroughEdge : Edge { }

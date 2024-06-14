@@ -51,7 +51,9 @@ public class CFG
             return to;
         }
 
-        edge ??= new Edge() { From = from, To = to };
+        edge ??= new FallthroughEdge();
+        edge.From = from;
+        edge.To = to;
 
         from.Edges.Add(to, edge);
         return to;
@@ -69,17 +71,18 @@ public class CFG
                     node = AddEdge(node, NewNode<BlockNode>(instructions));
                 }
 
-                node = AddEdge(target, AddEdge(node, NewNode<TargetNode>()));
+                node = AddEdge(node, NewNode<TargetNode>());
+                node = AddEdge(target, node, new ConditionalEdge());
             }
 
             instructions.Add(instruction);
 
             if (instruction.OpCode.FlowControl == FlowControl.Branch && instruction.Operand is Instruction branchTarget) {
-                _branchTargets[branchTarget.Offset] = AddEdge(node, NewNode<BlockNode>(instructions));
+                _branchTargets[branchTarget.Offset] = AddEdge(node, NewNode<BranchNode>(instructions));
                 node = null;
             }
             else if (instruction.OpCode.FlowControl == FlowControl.Cond_Branch && instruction.Operand is Instruction condBranchTarget) {
-                node = AddEdge(node, NewNode<BlockNode>(instructions));
+                node = AddEdge(node, NewNode<BranchNode>(instructions));
                 _branchTargets[condBranchTarget.Offset] = node;
             }
             else if (instruction.OpCode == OpCodes.Ret) {

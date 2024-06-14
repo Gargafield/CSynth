@@ -18,6 +18,11 @@ public class Program
         var cfg = CFG.From(assembly.MainModule.EntryPoint);
         cfg.Print();
 
+        var generator = new Generator();
+        generator.Generate(cfg);
+        generator.Print();
+
+
         Console.WriteLine(cfg.ToMermaid());
     }
 }
