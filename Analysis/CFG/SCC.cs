@@ -1,48 +1,49 @@
 ﻿namespace CSynth.Analysis;
 
 public static class SCC {
-    // Tarjan's strongly connected components algorithm
-    public static List<List<Block>> ComputeSCC(CFG cfg) {
+    public static List<HashSet<Block>> ComputeSCC(CFG cfg) {
+        // Make use of the fact that we know predecessors and successors
+        var sccs = new List<HashSet<Block>>();
         var index = 0;
         var stack = new Stack<Block>();
         var indices = new Dictionary<Block, int>();
         var lowlinks = new Dictionary<Block, int>();
         var onStack = new HashSet<Block>();
-        var scc = new List<List<Block>>();
 
-        void StrongConnect(Block v) {
-            indices[v] = index;
-            lowlinks[v] = index;
+        void StrongConnect(Block node) {
+            indices[node] = index;
+            lowlinks[node] = index;
             index++;
-            stack.Push(v);
-            onStack.Add(v);
+            stack.Push(node);
+            onStack.Add(node);
 
-            foreach (var w in v.Targets) {
-                if (!indices.ContainsKey(w)) {
-                    StrongConnect(w);
-                    lowlinks[v] = Math.Min(lowlinks[v], lowlinks[w]);
-                } else if (onStack.Contains(w)) {
-                    lowlinks[v] = Math.Min(lowlinks[v], indices[w]);
+            foreach (var successor in node.Successors) {
+                if (!indices.ContainsKey(successor)) {
+                    StrongConnect(successor);
+                    lowlinks[node] = Math.Min(lowlinks[node], lowlinks[successor]);
+                } else if (onStack.Contains(successor)) {
+                    lowlinks[node] = Math.Min(lowlinks[node], indices[successor]);
                 }
             }
 
-            if (lowlinks[v] == indices[v]) {
-                var component = new List<Block>();
+            if (lowlinks[node] == indices[node]) {
+                var scc = new HashSet<Block>();
                 Block w;
                 do {
                     w = stack.Pop();
                     onStack.Remove(w);
-                    component.Add(w);
-                } while (w != v);
-                scc.Add(component);
+                    scc.Add(w);
+                } while (w != node);
+                sccs.Add(scc);
             }
         }
 
-        foreach (var v in cfg) {
-            if (!indices.ContainsKey(v))
-                StrongConnect(v);
+        foreach (var node in cfg.Blocks) {
+            if (!indices.ContainsKey(node)) {
+                StrongConnect(node);
+            }
         }
 
-        return scc;
+        return sccs;
     }
 }

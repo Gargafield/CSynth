@@ -25,7 +25,7 @@ public class CFG : IEnumerable<Block> {
         foreach (var block in Blocks) {
             Console.WriteLine($"Block {block.Id}");
 
-            foreach (var target in block.Targets) {
+            foreach (var target in block.Successors) {
                 Console.WriteLine($"  -> {target.Id}");
             }
 
@@ -44,7 +44,7 @@ public class CFG : IEnumerable<Block> {
         Console.WriteLine("graph TD");
 
         foreach (var block in Blocks) {
-            foreach (var target in block.Targets) {
+            foreach (var target in block.Successors) {
                 Console.WriteLine($"  {block.Id} --> {target.Id}");
             }
         }

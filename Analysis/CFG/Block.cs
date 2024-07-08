@@ -7,27 +7,29 @@ public enum BlockId : int { }
 
 public abstract class Block {
     public BlockId Id { get; set; }
-    public List<Block> Targets { get; set; } = new();
+
+    public HashSet<Block> Predecessors { get; set; } = new();
+    public HashSet<Block> Successors { get; set; } = new();
 
     protected Block(BlockId id) {
         Id = id;
     }
 
     public void AddTarget(Block target) {
-        Targets.Add(target);
+        Successors.Add(target);
+        target.Predecessors.Add(this);
     }
 
     public void ReplaceTarget(Block oldTarget, Block newTarget) {
-        var index = Targets.IndexOf(oldTarget);
-        Targets[index] = newTarget;
+        if (oldTarget == newTarget) return;
+        Successors.Remove(oldTarget);
+        Successors.Add(newTarget);
+        oldTarget.Predecessors.Remove(this);
+        newTarget.Predecessors.Add(this);
     }
 
     public bool TargetsBlock(Block block) {
-        return Targets.Contains(block);
-    }
-    
-    public bool TargetsBlock(BlockId id) {
-        return Targets.Any(t => t.Id == id);
+        return Successors.Contains(block);
     }
 }
 
@@ -70,6 +72,24 @@ public abstract class SyntheticBlock : Block {
     protected SyntheticBlock(BlockId id) : base(id) { }
 }
 
+public class EntryBlock : SyntheticBlock {
+    protected EntryBlock(BlockId id) : base(id) {}
+
+    public static EntryBlock Create(CFG cfg) {
+        var block = cfg.Blocks.Add(id => new EntryBlock(id));
+        return block;
+    }
+}
+
+public class ExitBlock : SyntheticBlock {
+    protected ExitBlock(BlockId id) : base(id) {}
+
+    public static ExitBlock Create(CFG cfg) {
+        var block = cfg.Blocks.Add(id => new ExitBlock(id));
+        return block;
+    }
+}
+
 public class AssignmentBlock : SyntheticBlock {
     public Dictionary<Variable, object> Variables { get; set; } = new();
 
@@ -99,5 +119,6 @@ public class BranchBlock : SyntheticBlock {
 
     public void AddBranch(object value, Block target) {
         Branches[value] = target;
+        AddTarget(target);
     }
 }

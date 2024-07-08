@@ -65,6 +65,8 @@ public class FlowInfo
             .Take(blockOffsets.Count);
         var offsets = orderedOffsets.Zip(orderedOffsets.Skip(1), (start, end) => (start, end)).ToList();
 
+        var entry = EntryBlock.Create(CFG);
+
         // Create blocks
         foreach (var (start, end) in offsets) {
             var blockInstructions = instructions.Where(x => x.Offset >= start && x.Offset < end).ToList();
@@ -72,9 +74,8 @@ public class FlowInfo
             Blocks.Add(block);
         }
 
-        var noopEndInstruction = Instruction.Create(OpCodes.Nop);
-        noopEndInstruction.Offset = returnOffset;
-        var endBlock = BasicBlock.Create(CFG, new List<Instruction>() { noopEndInstruction });
+        entry.AddTarget(Blocks[0]);
+        var exit = ExitBlock.Create(CFG);
 
         // Add targets to blocks
         foreach (var block in Blocks) {
@@ -84,7 +85,7 @@ public class FlowInfo
                 foreach (var targetOffset in targets[lastInstruction.Offset]) {
 
                     if (targetOffset == -1) {
-                        block.AddTarget(endBlock);
+                        block.AddTarget(exit);
                         continue;
                     }
 
@@ -96,7 +97,5 @@ public class FlowInfo
                 block.AddTarget(Blocks.First(x => x.Offset == lastInstruction.Next.Offset));
             }
         }
-
-        Blocks.Add(endBlock);
     }
 }
