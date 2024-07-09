@@ -31,6 +31,16 @@ public abstract class Block {
     public bool TargetsBlock(Block block) {
         return Successors.Contains(block);
     }
+
+    public override bool Equals(object? obj) {
+        return obj is Block block && Equals(block);
+    }
+
+    public bool Equals(Block block) {
+        return Id == block.Id;
+    }
+
+    public override int GetHashCode() => (int)Id;
 }
 
 public class BlockCollection : AbstractCollection<Block> {
