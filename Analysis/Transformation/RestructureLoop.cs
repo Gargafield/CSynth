@@ -108,23 +108,24 @@ public class RestructureLoop
 
     private Block ConstructSingleHeader(List<Block> entries) {
         /*
-         ╭───╮   ╭───╮    ╭───╮        ╭───╮
-         │ 0 │   │ 1 │    │ 0 │        │ 1 │
-         ╰┬─┬╯   ╰─┬─╯    ╰┬─┬╯        ╰─┬─╯
-          │ ╰────╮ │       │ ╰────╮      │
-        ╭─┴─╮   ╭┴─┴╮    ╭─┴─╮  ╭─┴─╮  ╭─┴─╮
-        │ 2 ├─→─┤ 3 │ →  │ A │  │ A │  │ A │
-        ╰┬─┬╯   ╰┬──╯    ╰─┬─╯  ╰─┬─╯  ╰─┬─╯
-         ↓ ╰──←──╯         ╰───┬──╯──────╯
-                             ╭─┴─╮
-                             │ B │ <- New Header
-                             ╰┬─┬╯
-                           ╭──╯ ╰──╮
-                         ╭─┴─╮   ╭─┴─╮
-                         │ 2 ├─→─┤ 3 │
-                         ╰┬─┬╯   ╰─┬─╯
-                          ↓ ╰──←───╯
-        Where A is AssignmentBlocks, and B are BranchBlocks.
+         ╭───╮ ╭───╮     ╭───╮ ╭───╮ ╭───╮
+         │ 0 │ │ 1 │     │ 0 │ │ 1 │ │ 2 ├╮
+         ╰─┬─╯ ╰─┬─╯     ╰─┬─╯ ╰─┬─╯ ╰─┬─╯↑
+           ├─────╯         │     │     │
+         ╭─┴─╮ ╭───╮     ╭─┴─╮ ╭─┴─╮ ╭─┴─╮
+         │ 3 ├←┤ 2 │  →  │ A │ │ A │ │ A │
+         ╰─┬─╯ ╰─┬─╯     ╰─┬─╯ ╰─┬─╯ ╰─┬─╯
+           ↓     ↑         ╰─────┼─────╯
+           ╰Loops╯             ╭─┴─╮
+                  New Header > │ B │
+                               ╰─┬─╯
+                               ╭─┴─╮
+                  Old Header > │ 3 │
+                               ╰─┬─╯
+                                 ↓
+         If more than one entry exists.
+         Inserts AssignmentBlocks (A) on each entry arc (blocks to entries)
+         and funnels control through a single BranchBlock (B), the new header.
         */
 
         // If theres only one entry, we can just use that as the header
@@ -161,7 +162,7 @@ public class RestructureLoop
         /*
           ╭───←──╮ ↓      ╭───←──╮ ↓
         ╭─┴─╮   ╭┴─┴╮   ╭─┴─╮   ╭┴─┴╮
-        │ 0 ├─→─┤ 1 │   │ 0 ├─→─┤ 1 │
+        │ 0 ├─→─┤ 1 │   │ 0 ├─→─┤ 1 │ < Old Exits
         ╰─┬─╯   ╰─┬─╯   ╰─┬─╯   ╰─┬─╯
           │       │    →  │       │
         ╭─┴─╮   ╭─┴─╮   ╭─┴─╮   ╭─┴─╮  
@@ -169,14 +170,16 @@ public class RestructureLoop
         ╰─┬─╯   ╰─┬─╯   ╰─┬─╯   ╰─┬─╯
           ↓       ↓       ╰───┬───╯
                             ╭─┴─╮
-                            │ B │ <- New Exit
+                            │ B │ < New Exit
                             ╰┬─┬╯
                           ╭──╯ ╰──╮
                         ╭─┴─╮   ╭─┴─╮
                         │ 2 │   │ 3 │
                         ╰─┬─╯   ╰─┬─╯
                           ↓       ↓
-        Where A is AssignmentBlocks, and B are BranchBlocks.
+         If more than one exit exists.
+         Inserts AssignmentBlocks (A) on each exit arc (blocks from inside loop to exits)
+         and funnels control through a single BranchBlock (B), the new exit.
         */
 
         if (exits.Count == 1 && exits[0].Predecessors.Count == 1) {
@@ -206,16 +209,37 @@ public class RestructureLoop
     }
 
     private Block ConstructSingleControl(Block header, Block exit) {
-        var repititions = header.Predecessors.Intersect(loop).ToList();
+        /*
+               ↓               ↓
+             ╭─┴─╮           ╭─┴─╮    
+           ╭─┤ 0 ├─╮         │ 0 ├─────╮
+           ↑ ╰─┬─╯ ↑         ╰─┬─╯     │
+         ╭─┴─╮ ↓ ╭─┴─╮ → ╭───╮ ↓ ╭───╮ │
+         │ 1 ├─┴─┤ 2 │   │ 1 ├─┴─┤ 2 │ │
+         ╰─┬─╯   ╰─┬─╯   ╰─┬─╯   ╰─┬─╯ │
+           ╰───┬───╯     ╭─┴─╮   ╭─┴─╮ ↑
+               ↓         │ A │   │ A │ │
+                         ╰─┬─╯   ╰─┬─╯ │
+                           ╰───┬───╯   │
+                             ╭─┴─╮     │
+               New Control > │ B ├─────╯
+                             ╰─┬─╯
+                               ↓
+         If more than one repition
+         Inserts AssignmentBlocks (A) on each repetition arc (blocks from inside loop to header)
+         and funnel control through a single BranchBlock (B), the new control.
+        */
 
-        if (repititions.Count == 1 && repititions[0].Successors.Count == 2) {
-            return repititions[0];
+        var repetitions = header.Predecessors.Intersect(loop).ToList();
+
+        if (repetitions.Count == 1 && repetitions[0].Successors.Count == 2) {
+            return repetitions[0];
         }
 
         var variable = GetOrCreateControlVariable();
         var control = BranchBlock.Create(cfg, variable);
 
-        foreach (var predecessors in repititions) {
+        foreach (var predecessors in repetitions) {
             if (predecessors is AssignmentBlock assignment) {
                 assignment.ReplaceTarget(header, control);
             }
