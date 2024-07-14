@@ -100,8 +100,13 @@ public class ExitBlock : SyntheticBlock {
     }
 }
 
+public enum BlockVariable {
+    HeaderExit,
+    Control
+}
+
 public class AssignmentBlock : SyntheticBlock {
-    public Dictionary<Variable, object> Variables { get; set; } = new();
+    public Dictionary<BlockVariable, int> Assignments { get; set; } = new();
 
     protected AssignmentBlock(BlockId id) : base(id) { }
 
@@ -110,24 +115,24 @@ public class AssignmentBlock : SyntheticBlock {
         return block;
     }
 
-    public void AddVariable(Variable name, object value) {
-        Variables[name] = value;
+    public void AddVariable(BlockVariable name, int value) {
+        Assignments[name] = value;
     }
 }
 
 public class BranchBlock : SyntheticBlock {
-    public Variable Variable { get; set; } = default!;
-    public Dictionary<object, Block> Branches { get; set; } = new();
+    public BlockVariable Variable { get; set; } = default!;
+    public Dictionary<int, Block> Branches { get; set; } = new();
 
     protected BranchBlock(BlockId id) : base(id) { }
 
-    public static BranchBlock Create(CFG cfg, Variable variable) {
+    public static BranchBlock Create(CFG cfg, BlockVariable variable) {
         var block = cfg.Blocks.Add(id => new BranchBlock(id));
         block.Variable = variable;
         return block;
     }
 
-    public void AddBranch(object value, Block target) {
+    public void AddBranch(int value, Block target) {
         Branches[value] = target;
         AddTarget(target);
     }

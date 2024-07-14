@@ -5,9 +5,6 @@ public class RestructureLoop
     private CFG cfg;
     private HashSet<Block> loop = default!;
 
-    private Variable? EntryExitVariable = default!;
-    private Variable? ControlVariable = default!;
-
     private RestructureLoop(CFG cfg) {
         this.cfg = cfg;
     }
@@ -37,26 +34,8 @@ public class RestructureLoop
         }
     }
 
-    private Variable GetOrCreateEntryExitVariable() {
-        if (EntryExitVariable == null) {
-            EntryExitVariable = Variable.Create(cfg);
-        }
-
-        return EntryExitVariable;
-    }
-
-    private Variable GetOrCreateControlVariable() {
-        if (ControlVariable == null) {
-            ControlVariable = Variable.Create(cfg);
-        }
-
-        return ControlVariable;
-    }
-
     private void RestructureSingle() {
         var (entries, exits) = FindEntriesExits();
-        EntryExitVariable = null;
-        ControlVariable = null;
 
         var header = ConstructSingleHeader(entries);
 
@@ -133,7 +112,7 @@ public class RestructureLoop
             return entries[0];
         }
 
-        var variable = GetOrCreateEntryExitVariable();
+        var variable = BlockVariable.HeaderExit;
         var header = BranchBlock.Create(cfg, variable);
         loop.Add(header);
 
@@ -186,7 +165,7 @@ public class RestructureLoop
             return exits[0];
         }
 
-        var exitVariable = GetOrCreateEntryExitVariable();
+        var exitVariable = BlockVariable.HeaderExit;
         var exit = BranchBlock.Create(cfg, exitVariable);
 
         var counter = -1;
@@ -236,7 +215,7 @@ public class RestructureLoop
             return repetitions[0];
         }
 
-        var variable = GetOrCreateControlVariable();
+        var variable = BlockVariable.Control;
         var control = BranchBlock.Create(cfg, variable);
 
         foreach (var predecessors in repetitions) {
