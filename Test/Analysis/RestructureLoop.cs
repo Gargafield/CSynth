@@ -6,7 +6,49 @@ namespace CSynth.Test;
 
 public class RestructureLoopTest
 {
-    
+    [Fact]
+    public void RestructurePerfectCaseNoop() {
+        // Loop doesn't require any restructuring
+
+        var graph = """
+        0[1]
+        1[1,2]
+        2[]
+        """;
+
+        var cfg = CFG.FromEquality(graph);
+
+        RestructureLoop.Restructure(cfg);
+
+        var result = cfg.ToEquality();
+        Assert.Equal(graph, result);
+    }
+
+    [Fact]
+    public void RestructureBigBodyNoop() {
+        // Loop doesn't require any restructuring
+
+        var graph = """
+        0[1]
+        1[2]
+        2[3]
+        3[4]
+        4[5]
+        5[1,6]
+        6[]
+        """;
+
+        var cfg = CFG.FromEquality(graph);
+
+        Debug.WriteLine(cfg.ToMermaid());
+
+        RestructureLoop.Restructure(cfg);
+
+        Debug.WriteLine(cfg.ToMermaid());
+
+        var result = cfg.ToEquality();
+        Assert.Equal(graph, result);
+    }
 
     [Fact]
     public void RestructureWithAllSinglePoints() {
