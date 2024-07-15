@@ -20,6 +20,11 @@ public abstract class Block {
         target.Predecessors.Add(this);
     }
 
+    public void RemoveTarget(Block target) {
+        Successors.Remove(target);
+        target.Predecessors.Remove(this);
+    }
+
     public void ReplaceTarget(Block oldTarget, Block newTarget) {
         if (oldTarget == newTarget) return;
         Successors.Remove(oldTarget);

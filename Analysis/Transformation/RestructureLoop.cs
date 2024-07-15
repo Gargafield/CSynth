@@ -30,11 +30,14 @@ public class RestructureLoop
 
         foreach (var loop in loops) {
             restructure.loop = loop;
-            restructure.RestructureSingle();
+            var (header, control) = restructure.RestructureSingle();
+
+            var region = LoopRegion.Create(cfg, loop, header, control);
+            region.RemoveBackedge();
         }
     }
 
-    private void RestructureSingle() {
+    private Tuple<Block, Block> RestructureSingle() {
         var (entries, exits) = FindEntriesExits();
 
         var header = ConstructSingleHeader(entries);
@@ -59,11 +62,13 @@ public class RestructureLoop
               ↓
             */
 
-            return;
+            return Tuple.Create(header, exits[0]);
         }
 
         var exit = ConstructSingleExit(exits);
         var control = ConstructSingleControl(header, exit);
+
+        return Tuple.Create(header, control);
     }
 
 

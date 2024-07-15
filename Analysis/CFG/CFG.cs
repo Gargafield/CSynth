@@ -1,10 +1,12 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 using System.Text;
 
 namespace CSynth.Analysis;
 
 public class CFG : IEnumerable<Block> {
     public BlockCollection Blocks { get; set; } = new();
+    public RegionCollection Regions { get; set; } = new();
 
     public CFG() { }
 
