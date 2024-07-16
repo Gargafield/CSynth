@@ -33,7 +33,6 @@ public class RestructureLoop
             var (header, control) = restructure.RestructureSingle();
 
             var region = LoopRegion.Create(cfg, loop, header, control);
-            region.RemoveBackedge();
         }
     }
 
