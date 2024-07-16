@@ -27,31 +27,28 @@ public class Program
         // RestructureLoop.Restructure(cfg);
         // cfg.PrintMermaid();
 
-        var cfg = new CFG();
-        var block0 = BasicBlock.Create(cfg);
-        var block1 = BasicBlock.Create(cfg);
-        var block2 = BasicBlock.Create(cfg);
-        var block3 = BasicBlock.Create(cfg);
-        var block4 = BasicBlock.Create(cfg);
-        var block5 = BasicBlock.Create(cfg);
-        var block6 = BasicBlock.Create(cfg);
+        var graph = """
+        0[1,3]
+        1[3,2]
+        2[4]
+        3[4]
+        4[5]
+        5[]
+        """;
 
-        block0.AddTarget(block1);
+        // var graph = """
+        // 0[1]
+        // 1[2,3,5]
+        // 2[4]
+        // 3[4]
+        // 4[]
+        // 5[]
+        // """;
 
-        block1.AddTarget(block2);
-        block1.AddTarget(block3);
-
-        block2.AddTarget(block3);
-        block2.AddTarget(block4);
-
-        block3.AddTarget(block2);
-        block3.AddTarget(block5);
-
-        block4.AddTarget(block6);
-        block5.AddTarget(block6);
+        var cfg = CFG.FromEquality(graph);
 
         cfg.PrintMermaid();
-        RestructureLoop.Restructure(cfg);
+        RestructureBranch.Restructure(cfg);
         cfg.PrintMermaid();
         
 

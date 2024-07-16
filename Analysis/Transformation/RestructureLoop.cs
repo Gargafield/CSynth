@@ -220,7 +220,7 @@ public class RestructureLoop
             return repetitions[0];
         }
 
-        var variable = BlockVariable.Control;
+        var variable = BlockVariable.LoopControl;
         var control = BranchBlock.Create(cfg, variable);
 
         foreach (var predecessors in repetitions) {

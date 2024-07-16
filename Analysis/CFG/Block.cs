@@ -107,7 +107,8 @@ public class ExitBlock : SyntheticBlock {
 
 public enum BlockVariable {
     HeaderExit,
-    Control
+    LoopControl,
+    BranchControl
 }
 
 public class AssignmentBlock : SyntheticBlock {
@@ -140,5 +141,14 @@ public class BranchBlock : SyntheticBlock {
     public void AddBranch(int value, Block target) {
         Branches[value] = target;
         AddTarget(target);
+    }
+}
+
+public class NoopBlock : SyntheticBlock {
+    protected NoopBlock(BlockId id) : base(id) { }
+
+    public static NoopBlock Create(CFG cfg) {
+        var block = cfg.Blocks.Add(id => new NoopBlock(id));
+        return block;
     }
 }

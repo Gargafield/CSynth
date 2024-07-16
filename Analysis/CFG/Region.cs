@@ -48,3 +48,29 @@ public class LoopRegion : Region {
         Control.AddTarget(Header);
     }
 }
+
+public class BranchRegion : Region {
+    public Block Header { get; set; }
+    public Block Exit { get; set; }
+    public List<HashSet<Block>> Regions { get; set; } = new();
+
+    private BranchRegion(RegionId id, HashSet<Block> blocks, Block header, Block exit, List<HashSet<Block>> regions) : base(id) {
+        Blocks = blocks;
+        Header = header;
+        Exit = exit;
+        Regions = regions;
+    }
+
+    public static BranchRegion Create(CFG cfg, Block header, Block exit, List<HashSet<Block>> regions) {
+        var blocks = regions.SelectMany(region => region).ToHashSet();
+        blocks.Add(header);
+        blocks.Add(exit);
+        
+        var region = cfg.Regions.Add(id => new BranchRegion(id, blocks, header, exit, regions));
+        return region;
+    }
+
+    public void RemoveExit() {
+        Header.RemoveTarget(Exit);
+    }
+}
