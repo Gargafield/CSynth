@@ -1,4 +1,6 @@
-﻿namespace CSynth.Analysis;
+﻿using System.Collections;
+
+namespace CSynth.Analysis;
 
 public enum RegionId : uint { }
 
@@ -52,16 +54,29 @@ public class LoopRegion : Region {
 public class BranchRegion : Region {
     public Block Header { get; set; }
     public Block Exit { get; set; }
-    public List<HashSet<Block>> Regions { get; set; } = new();
+    public List<Region> Regions { get; set; } = new();
 
-    private BranchRegion(RegionId id, HashSet<Block> blocks, Block header, Block exit, List<HashSet<Block>> regions) : base(id) {
+    public class Region : IEnumerable<Block> {
+        public Block Header;
+        public HashSet<Block> Blocks;
+
+        public Region(Block header, HashSet<Block> blocks) {
+            Header = header;
+            Blocks = blocks;
+        }
+
+        public IEnumerator<Block> GetEnumerator() => Blocks.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private BranchRegion(RegionId id, HashSet<Block> blocks, Block header, Block exit, List<Region> regions) : base(id) {
         Blocks = blocks;
         Header = header;
         Exit = exit;
         Regions = regions;
     }
 
-    public static BranchRegion Create(CFG cfg, Block header, Block exit, List<HashSet<Block>> regions) {
+    public static BranchRegion Create(CFG cfg, Block header, Block exit, List<Region> regions) {
         var blocks = regions.SelectMany(region => region).ToHashSet();
         blocks.Add(header);
         blocks.Add(exit);

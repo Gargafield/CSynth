@@ -14,8 +14,8 @@ public class RestructureBranch
     public static void Restructure(CFG cfg) {
 
         var restructure = new RestructureBranch(cfg);
-        restructure.set = cfg.Blocks.ToHashSet();
 
+        restructure.set = cfg.Blocks.ToHashSet();
         restructure.dominance = restructure.FindDominants();
 
         var stack = new Stack<Block>();
@@ -43,7 +43,7 @@ public class RestructureBranch
         BranchRegion.Create(cfg, branch, exit, regions);
     }
 
-    private Block ConstructSingleExit(List<HashSet<Block>> regions) {
+    private Block ConstructSingleExit(List<BranchRegion.Region> regions) {
         var dominators = this.dominance[branch];
         var continuations = regions.SelectMany(region => region.SelectMany(b => b.Successors.Except(region))).Distinct().ToList();
 
@@ -64,7 +64,7 @@ public class RestructureBranch
             if (exits.Count > 1) {
                 target = NoopBlock.Create(cfg);
                 target.AddTarget(control);
-                region.Add(target);
+                region.Blocks.Add(target);
             }
 
             foreach (var continuation in continuations) {
@@ -74,7 +74,7 @@ public class RestructureBranch
                     exit.ReplaceTarget(continuation, assigment);
                     assigment.AddTarget(target);
 
-                    region.Add(assigment);
+                    region.Blocks.Add(assigment);
                 }
             }
         }
@@ -82,11 +82,12 @@ public class RestructureBranch
         return control;
     }
 
-    private List<HashSet<Block>> ConstructBranchRegions(Block branch) {
-        var regions = new List<HashSet<Block>>();
+    private List<BranchRegion.Region> ConstructBranchRegions(Block branch) {
+        var regions = new List<BranchRegion.Region>();
         
         foreach (var successor in branch.Successors.ToList()) {
-            HashSet<Block> region;
+            HashSet<Block> blocks;
+            Block head = successor;
 
             var dominators = dominance[successor];
             var preds = successor.Predecessors
@@ -96,31 +97,28 @@ public class RestructureBranch
                 var noop = NoopBlock.Create(cfg);
                 branch.ReplaceTarget(successor, noop);
                 noop.AddTarget(successor);
-                region = new HashSet<Block>() { noop };
+                blocks = new HashSet<Block>() { noop };
+                head = noop;
             }
             else {
                 // Discover all blocks that have succesesor as dominator
-                region = new HashSet<Block>();
+                blocks = new HashSet<Block>();
                 var stack = new Stack<Block>();
                 stack.Push(successor);
                 while (stack.Count > 0) {
                     var block = stack.Pop();
-                    if (region.Contains(block))
+                    if (blocks.Contains(block))
                         continue;
 
-                    region.Add(block);
+                    blocks.Add(block);
                     foreach (var succ in block.Successors) {
                         if (dominance[succ].Contains(successor)) {
                             stack.Push(succ);
                         }
                     }
                 }
-
-                foreach (var block in region) {
-                    set.Remove(block);
-                }
             }
-            regions.Add(region);
+            regions.Add(new BranchRegion.Region(head, blocks));
         }
 
         return regions;

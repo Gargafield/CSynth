@@ -218,14 +218,13 @@ public class Compiler
         stack.Push(branch.Exit);
     }
 
-    private List<Statement> DoBranchRegion(HashSet<Block> region) {
+    private List<Statement> DoBranchRegion(BranchRegion.Region region) {
         var stats = new List<Statement>();
         scopes.Push(stats);
-        var head = region.Where(b => b.Predecessors.Except(region).Any()).First();
         var stack = new Stack<Block>();
-        stack.Push(head);
+        stack.Push(region.Header);
         stacks.Push(stack);
-        Compile(region);
+        Compile(region.Blocks);
         stacks.Pop();
         scopes.Pop();
         return stats;
