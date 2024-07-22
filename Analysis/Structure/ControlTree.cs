@@ -6,23 +6,35 @@ namespace CSynth.Analysis;
 public class ControlTree {
     private CFG cfg;
     private Stack<Structure> stack = new();
+    private HashSet<Block> visited = new();
     public Structure Structure => stack.Peek();
 
-    public ControlTree(CFG cfg) {
+    private ControlTree(CFG cfg) {
         this.cfg = cfg;
         stack.Push(new LinearStructure());
     }
 
-    public void Build() {
+    public static ControlTree From(CFG cfg) {
+        var tree = new ControlTree(cfg);
+        tree.Build();
+        return tree;
+    }
+
+    private void Build() {
         BuildBlocks(cfg.Blocks.First(), cfg.Blocks.ToHashSet());
     }
     
-    public void BuildBlocks(Block block, HashSet<Block> blocks) {
+    private void BuildBlocks(Block block, HashSet<Block> blocks) {
         // Depth-first search
         var stack = new Stack<Block>();
         stack.Push(block);
         while (stack.Count > 0) {
             var current = stack.Pop();
+
+            if (!blocks.Contains(current) || visited.Contains(current)) {
+                continue;
+            }
+            visited.Add(current);
 
             // This block is the head of a loop
             var loop = cfg.Regions.OfType<LoopRegion>().FirstOrDefault(r => r.Header == current);
@@ -37,16 +49,21 @@ public class ControlTree {
 
                 foreach (var region in branch.Regions) {
                     this.stack.Push(new LinearStructure());
-                    BuildBlocks(region.Header, blocks);
+                    BuildBlocks(region.Header, region.Blocks);
                     var structure = this.stack.Pop();
                     Structure.Children.Add(structure);
                 }
+
+                var branchStruct = this.stack.Pop();
+                Structure.Children.Add(branchStruct);
+
+                stack.Push(branch.Exit);
             }
             else {
                 Structure.Children.Add(new BlockStructure(current));
 
                 foreach (var succ in current.Successors) {
-                    if (blocks.Contains(succ)) {
+                    if (blocks.Contains(succ) && !visited.Contains(succ)) {
                         stack.Push(succ);
                     }
                 }
@@ -73,7 +90,6 @@ public class ControlTree {
         foreach (var children in structure.Children) {
             builder.Append(ToString(children, indent + 1));
         }
-        builder.AppendLine();
         return builder.ToString();
     }
 }

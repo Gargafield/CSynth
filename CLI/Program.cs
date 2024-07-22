@@ -21,20 +21,18 @@ public class Program
         var cfg = flowInfo.CFG;
         cfg.Print();
         cfg.PrintMermaid();
-        RestructureLoop.Restructure(cfg);
-        foreach (var loop in cfg.Regions.OfType<LoopRegion>())
-            loop.RemoveBackedge();
-        
-        RestructureBranch.Restructure(cfg);
-        
-        foreach (var loop in cfg.Regions.OfType<LoopRegion>())
-            loop.AddBackedge();
+
+        Restructure.RestructureCFG(cfg);
 
         cfg.PrintMermaid();
-        var compiler = new Compiler.Compiler(cfg);
-        var statements = compiler.Compile();
 
-        foreach (var statement in statements)
-            Console.WriteLine(statement);
+        var tree = ControlTree.From(cfg);
+        Console.WriteLine(tree.ToString());
+
+        // var compiler = new Compiler.Compiler(cfg);
+        // var statements = compiler.Compile();
+
+        // foreach (var statement in statements)
+        //     Console.WriteLine(statement);
     }
 }
