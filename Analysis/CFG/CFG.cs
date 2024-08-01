@@ -20,7 +20,7 @@ public class CFG : IEnumerable<Block> {
 
         var cfg = new CFG();
 
-        var split = text.Split(Environment.NewLine);
+        var split = text.Split(['\r', '\n']);
         var blocks = new Dictionary<Block, List<BlockId>>();
 
         var counter = 0;
@@ -96,7 +96,8 @@ public class CFG : IEnumerable<Block> {
         var builder = new StringBuilder();
         foreach (var block in Blocks.OrderBy(b => b.Id)) {
             var targets = block.Successors.OrderBy(b => b.Id);
-            builder.AppendLine($"{block.Id}[{string.Join(',', targets.Select(t => (int)t.Id))}]");
+            builder.Append($"{block.Id}[{string.Join(',', targets.Select(t => (int)t.Id))}]");
+            builder.Append('\n');
         }
 
         return builder.ToString().TrimEnd();

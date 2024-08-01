@@ -85,7 +85,8 @@ public class ControlTree {
     private string ToString(Structure structure, int indent = 0) {
         var builder = new StringBuilder();
         builder.Append(' ', indent * 2);
-        builder.AppendLine(structure.ToString());
+        builder.Append(structure.ToString());
+        builder.Append('\n');
 
         foreach (var children in structure.Children) {
             builder.Append(ToString(children, indent + 1));
