@@ -53,8 +53,9 @@ public class RestructureBranch
 
         var variable = BlockVariable.BranchControl;
         var control = BranchBlock.Create(cfg, variable);
+        
         for (int i = 0; i < continuations.Count; i++) {
-            control.AddBranch(i, continuations[i]);
+            control.AddTarget(continuations[i]);
         }
 
         foreach (var region in regions) {

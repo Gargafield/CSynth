@@ -1,13 +1,9 @@
-﻿using System.Diagnostics;
-using Mono.Cecil.Cil;
-using Mono.Collections.Generic;
-
-namespace CSynth.Analysis;
+﻿namespace CSynth.Analysis;
 
 public class FlowInfo
 {
     public CFG CFG { get; set; } = new();
-    public List<BasicBlock> Blocks { get; set; } = new();
+    public List<Block> Blocks { get; set; } = new();
 
     private HashSet<int> blockOffsets { get; set; } = new();
     private Dictionary<int, List<int>> targets { get; set; } = new();
@@ -15,11 +11,11 @@ public class FlowInfo
 
     internal FlowInfo() { }
 
-    public static FlowInfo From(Collection<Instruction> instructions)
+    public static FlowInfo From(ICollection<Statement> statements)
     {
         var flowInfo = new FlowInfo();
-        flowInfo.Build(instructions);
-        flowInfo.BuildCFG(instructions);
+        flowInfo.Build(statements);
+        flowInfo.BuildCFG(statements);
         return flowInfo;
     }
 
@@ -33,44 +29,55 @@ public class FlowInfo
             blockOffsets.Add(target);
     }
 
-    private void Build(Collection<Instruction> instructions) {
+    private void Build(ICollection<Statement> statements) {
         blockOffsets.Add(0);
 
-        foreach (var instruction in instructions) {
-            var opCode = instruction.OpCode;
+        foreach (var statement in statements) {
 
-            if (opCode.IsConditionalBranch()) {
-                var target = (Instruction)instruction.Operand;
-                AddTarget(instruction.Offset, target.Offset);
-                AddTarget(instruction.Offset, instruction.Next.Offset);
+            if (statement is BranchStatement branch) {
+                blockOffsets.Add(branch.Offset - 1);
+                AddTarget(branch.Offset, branch.Target);
+                AddTarget(branch.Offset, branch.Offset + 1);
             }
-            else if (opCode.IsUnconditionalBranch()) {
-                var target = (Instruction)instruction.Operand;
-                AddTarget(instruction.Offset, target.Offset);
+            else if (statement is GotoStatement @goto) {
+                AddTarget(@goto.Offset, @goto.Target);
             }
-            else if (opCode.IsReturn()) {
-                AddTarget(instruction.Offset, -1);
+            else if (statement is ReturnStatement @return) {
+                AddTarget(@return.Offset, -1);
             }
         }
 
-        var lastInstruction = instructions.Last();
-        returnOffset = lastInstruction.Offset + lastInstruction.GetSize();
+        var last = statements.Last();
+        returnOffset = last.Offset + 1;
         blockOffsets.Add(returnOffset);
     }
 
-    private void BuildCFG(Collection<Instruction> instructions) {
+    private void BuildCFG(ICollection<Statement> statements) {
         
         // Collect block offsets into pairs start, end
         var orderedOffsets = blockOffsets.OrderBy(x => x)
             .Take(blockOffsets.Count);
         var offsets = orderedOffsets.Zip(orderedOffsets.Skip(1), (start, end) => (start, end)).ToList();
+        var targets = new Dictionary<Block, List<int>>();
 
         var entry = EntryBlock.Create(CFG);
 
         // Create blocks
         foreach (var (start, end) in offsets) {
-            var blockInstructions = instructions.Where(x => x.Offset >= start && x.Offset < end).ToList();
-            var block = BasicBlock.Create(CFG, blockInstructions);
+            var blockStatements = statements.Where(x => x.Offset >= start && x.Offset < end).ToList();
+
+            Block block;
+
+            var last = blockStatements.Last();
+            if (last is BranchStatement branch && blockStatements.Count == 1) {
+                block = BranchBlock.Create(CFG, branch.Variable);
+                targets[block] = new List<int> { branch.Target, branch.Offset + 1 };
+            }
+            else {
+                block = BasicBlock.Create(CFG, blockStatements);
+                targets[block] = this.targets[last.Offset];
+            }
+
             Blocks.Add(block);
         }
 
@@ -79,23 +86,27 @@ public class FlowInfo
 
         // Add targets to blocks
         foreach (var block in Blocks) {
-            var lastInstruction = block.Instructions.Last();
-
-            if (targets.ContainsKey(lastInstruction.Offset)) {
-                foreach (var targetOffset in targets[lastInstruction.Offset]) {
+            if (targets.ContainsKey(block)) {
+                foreach (var targetOffset in targets[block]) {
 
                     if (targetOffset == -1) {
                         block.AddTarget(exit);
                         continue;
                     }
 
-                    var targetBlock = Blocks.First(x => x.Offset == targetOffset);
+                    var targetBlock = Blocks.First(x => x.Offset >= targetOffset);
                     block.AddTarget(targetBlock);
                 }
             }
             else {
-                block.AddTarget(Blocks.First(x => x.Offset == lastInstruction.Next.Offset));
+                var nextBlock = Blocks.First(x => x.Offset > lastInstruction.Offset);
+                block.AddTarget(nextBlock);
             }
+        }
+
+        // Remove Branch and Goto statements
+        foreach (var block in Blocks) {
+            block.Statements.RemoveAll(x => x is BranchStatement || x is GotoStatement);
         }
     }
 }

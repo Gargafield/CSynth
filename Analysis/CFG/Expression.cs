@@ -1,4 +1,6 @@
-﻿namespace CSynth.Compiler;
+﻿using Mono.Cecil;
+
+namespace CSynth.Analysis;
 
 public abstract class Expression
 { }
@@ -52,6 +54,38 @@ public class NumberExpression : Expression
     public override string ToString()
     {
         return Value.ToString();
+    }
+}
+
+public class StringExpression : Expression
+{
+    public string Value { get; set; }
+
+    public StringExpression(string value)
+    {
+        Value = value;
+    }
+
+    public override string ToString()
+    {
+        return $"\"{Value}\"";
+    }
+}
+
+public class CallExpression : Expression
+{
+    public MethodReference Method { get; set; }
+    public List<Expression> Arguments { get; set; }
+
+    public CallExpression(MethodReference method, List<Expression> arguments)
+    {
+        Method = method;
+        Arguments = arguments;
+    }
+
+    public override string ToString()
+    {
+        return $"{Method.Name}({string.Join(", ", Arguments)})";
     }
 }
 

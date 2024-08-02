@@ -72,7 +72,7 @@ public class CFG : IEnumerable<Block> {
             }
 
             if (block is BasicBlock basicBlock) {
-                foreach (var instruction in basicBlock.Instructions) {
+                foreach (var instruction in basicBlock.Statements) {
                     Console.WriteLine(instruction);
                 }
             }
