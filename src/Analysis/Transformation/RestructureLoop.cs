@@ -1,4 +1,5 @@
-﻿namespace CSynth.Analysis.Transformation;
+﻿
+namespace CSynth.Analysis.Transformation;
 
 public class RestructureLoop
 {
@@ -193,21 +194,21 @@ public class RestructureLoop
 
     private Block ConstructSingleControl(Block header, Block exit) {
         /*
-               ↓               ↓
-             ╭─┴─╮           ╭─┴─╮    
-           ╭─┤ 0 ├─╮         │ 0 ├─────╮
-           ↑ ╰─┬─╯ ↑         ╰─┬─╯     │
-         ╭─┴─╮ ↓ ╭─┴─╮ → ╭───╮ ↓ ╭───╮ │
-         │ 1 ├─┴─┤ 2 │   │ 1 ├─┴─┤ 2 │ │
-         ╰─┬─╯   ╰─┬─╯   ╰─┬─╯   ╰─┬─╯ │
-           ╰───┬───╯     ╭─┴─╮   ╭─┴─╮ ↑
-               ↓         │ A │   │ A │ │
-                         ╰─┬─╯   ╰─┬─╯ │
-                           ╰───┬───╯   │
-                             ╭─┴─╮     │
-               New Control > │ B ├─────╯
-                             ╰─┬─╯
-                               ↓
+               ↓                 ↓
+             ╭─┴─╮             ╭─┴─╮    
+       ╭─────┤ 0 ├─────╮       │ 0 ├─────╮
+       │     ╰─┬─╯     │       ╰─┬─╯     │
+       │ ╭───╮ ↓ ╭───╮ │ → ╭───╮ ↓ ╭───╮ │
+       ↑ │ 1 ├─┴─┤ 2 │ ↑   │ 1 ├─┴─┤ 2 │ │
+       │ ╰─┬─╯   ╰─┬─╯ │   ╰─┬─╯   ╰─┬─╯ │
+       ╰───┤       ├───╯   ╭─┴─╮   ╭─┴─╮ ↑
+           ↓       ↓       │ A │   │ A │ │
+                           ╰─┬─╯   ╰─┬─╯ │
+                             ╰───┬───╯   │
+                               ╭─┴─╮     │
+                 New Control > │ B ├─────╯
+                               ╰─┬─╯
+                                 ↓
          If more than one repition
          Inserts AssignmentBlocks (A) on each repetition arc (blocks from inside loop to header)
          and funnel control through a single BranchBlock (B), the new control.

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using CSynth.AST;
-using Mono.Cecil.Cil;
+﻿using CSynth.AST;
 
 namespace CSynth.Analysis;
 

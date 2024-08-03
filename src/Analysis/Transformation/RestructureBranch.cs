@@ -1,4 +1,5 @@
-﻿namespace CSynth.Analysis.Transformation;
+﻿
+namespace CSynth.Analysis.Transformation;
 
 public class RestructureBranch
 {
