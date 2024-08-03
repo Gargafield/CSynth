@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using CSynth.Analysis;
+using CSynth.AST;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -56,23 +57,24 @@ public class Compiler
 
     private void CompileBranch(BranchStructure structure) {
 
-        var conditions = new List<Tuple<Expression, List<Statement>>>();
+        var conditions = new List<Tuple<Expression?, List<Statement>>>();
         var branch = structure.Block as BranchBlock;
 
-        var counter = 0;
+        // TODO: Support more than 2 branches
+        if (structure.Children.Count > 2) {
+            throw new NotImplementedException("Only binary branches are supported");
+        }
+        
+        var first = true;
         foreach (var child in structure.Children) {
             Scopes.Push(new());
             CompileStructure(child);
-            conditions.Add(new Tuple<Expression, List<Statement>>(
-                new BinaryExpression(
-                    new VariableExpression(branch!.Variable),
-                    new NumberExpression(counter),
-                    "=="
-                ),
+
+            conditions.Add(new Tuple<Expression?, List<Statement>>(
+                first ? new VariableExpression(branch!.Variable) : null,
                 Scopes.Pop()
             ));
-
-            counter++;
+            first = false;
         }
 
         Statements.Add(new IfStatement(-1, conditions));

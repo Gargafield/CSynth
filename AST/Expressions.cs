@@ -1,17 +1,33 @@
 ﻿using Mono.Cecil;
 
-namespace CSynth.Analysis;
+namespace CSynth.AST;
 
 public abstract class Expression
 { }
+
+public enum Operator {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
+    And,
+    Or
+}
 
 public class BinaryExpression : Expression
 {
     public Expression Left { get; set; }
     public Expression Right { get; set; }
-    public string Operator { get; set; }
+    public Operator Operator { get; set; }
 
-    public BinaryExpression(Expression left, Expression right, string op)
+    public BinaryExpression(Expression left, Expression right, Operator op)
     {
         Left = left;
         Right = right;
@@ -21,6 +37,21 @@ public class BinaryExpression : Expression
     public override string ToString()
     {
         return $"({Left} {Operator} {Right})";
+    }
+}
+
+public class UnaryExpression : Expression
+{
+    public Expression Operand { get; set; }
+
+    public UnaryExpression(Expression operand)
+    {
+        Operand = operand;
+    }
+
+    public override string ToString()
+    {
+        return $"!{Operand}";
     }
 }
 
@@ -101,23 +132,5 @@ public class VariableExpression : Expression
     public override string ToString()
     {
         return Name;
-    }
-}
-
-public class IfExpression : Expression {
-    public Expression Condition { get; set; }
-    public Expression Then { get; set; }
-    public Expression Else { get; set; }
-
-    public IfExpression(Expression condition, Expression then, Expression @else)
-    {
-        Condition = condition;
-        Then = then;
-        Else = @else;
-    }
-
-    public override string ToString()
-    {
-        return $"if ({Condition}) then {Then} else {Else}";
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace CSynth.Analysis;
+﻿using CSynth.AST;
+
+namespace CSynth.Analysis;
 
 public class FlowInfo
 {

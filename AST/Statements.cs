@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace CSynth.Analysis;
+namespace CSynth.AST;
 
 public abstract class Statement {
     public int Offset { get; set; }
@@ -27,9 +27,9 @@ public class AssignmentStatement : Statement {
 }
 
 public class IfStatement : Statement {
-    public List<Tuple<Expression, List<Statement>>> Conditions { get; set; } = new();
+    public List<Tuple<Expression?, List<Statement>>> Conditions { get; set; } = new();
 
-    public IfStatement(int offset, List<Tuple<Expression, List<Statement>>> conditions) : base(offset) {
+    public IfStatement(int offset, List<Tuple<Expression?, List<Statement>>> conditions) : base(offset) {
         Conditions = conditions;
     }
 
@@ -38,15 +38,15 @@ public class IfStatement : Statement {
         var first = true;
         foreach (var (expr, stats) in Conditions) {
             
-            var stat = first ? "if" : "elseif";
+            var stat = first ? "if" : (expr == null ? "else" : "elseif");
             first = false;
             builder.Append($"{stat} ({expr}) then\n");
             foreach (var statement in stats) {
                 builder.Append(statement);
                 builder.Append("\n");
             }
-            builder.Append("end\n");
         }
+        builder.Append("end\n");
 
         return builder.ToString();
     }

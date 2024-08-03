@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using CSynth.AST;
 using Mono.Cecil.Cil;
 
 namespace CSynth.Analysis;
@@ -120,8 +121,14 @@ public class AssignmentBlock : BasicBlock {
         return block;
     }
 
-    public void AddVariable(string name, int value) {
-        Statements.Add(new AssignmentStatement(-1, name, new NumberExpression(value)));
+    public void AddVariable(string name, object value) {
+        Expression expr = value switch {
+            int i => new NumberExpression(i),
+            bool b => b ? BoolExpression.True : BoolExpression.False,
+            _ => throw new NotImplementedException()
+        };
+
+        Statements.Add(new AssignmentStatement(-1, name, expr));
     }
 }
 

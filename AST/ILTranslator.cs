@@ -2,15 +2,15 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace CSynth.Analysis;
+namespace CSynth.AST;
 
-public class Translator {
+public class ILTranslator {
     private List<Statement> _statements = new();
     private Stack<Expression> _expressions = new();
 
     
     public static List<Statement> Translate(IEnumerable<Instruction> instructions) {
-        var translator = new Translator();
+        var translator = new ILTranslator();
 
         foreach (var instruction in instructions) {
             translator.TranslateInstruction(instruction);
@@ -18,6 +18,21 @@ public class Translator {
 
         return translator._statements;
     }
+
+    private Dictionary<string, Operator> OperatorMap = new() {
+        { "add", Operator.Add },
+        { "sub", Operator.Subtract },
+        { "mul", Operator.Multiply },
+        { "div", Operator.Divide },
+        { "rem", Operator.Modulo },
+        { "ceq", Operator.Equal },
+        { "cgt", Operator.GreaterThan },
+        { "clt", Operator.LessThan },
+        { "cgt.un", Operator.GreaterThanOrEqual },
+        { "clt.un", Operator.LessThanOrEqual },
+        { "and", Operator.And },
+        { "or", Operator.Or }
+    };
 
     private void TranslateInstruction(Instruction instruction) {
         switch (instruction.OpCode.Code) {
@@ -82,7 +97,7 @@ public class Translator {
             case Code.Rem: {
                 var right = _expressions.Pop();
                 var left = _expressions.Pop();
-                _expressions.Push(new BinaryExpression(left, right, instruction.OpCode.Name));
+                _expressions.Push(new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name]));
                 break;
             }
             case Code.Ldstr:
@@ -110,7 +125,7 @@ public class Translator {
                 var target = (Instruction)instruction.Operand;
                 var right = _expressions.Pop();
                 var left = _expressions.Pop();
-                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", new BinaryExpression(left, right, "<")));
+                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", new BinaryExpression(left, right, Operator.LessThan)));
                 _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
                 break;
             }
@@ -126,7 +141,7 @@ public class Translator {
             case Code.Ceq: {
                 var right = _expressions.Pop();
                 var left = _expressions.Pop();
-                _expressions.Push(new BinaryExpression(left, right, instruction.OpCode.Name));
+                _expressions.Push(new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name]));
                 break;
             }
             case Code.Brtrue_S: {

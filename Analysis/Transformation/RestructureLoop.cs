@@ -232,7 +232,7 @@ public class RestructureLoop
                 predecessors.ReplaceTarget(header, assignment);
             }
 
-            assignment.AddVariable(variable, 1);
+            assignment.AddVariable(variable, true);
         }
 
         foreach (var predecessors in exit.Predecessors) {
@@ -245,7 +245,7 @@ public class RestructureLoop
                 predecessors.ReplaceTarget(exit, assignment);
             }
 
-            assignment.AddVariable(variable, 0);
+            assignment.AddVariable(variable, false);
         }
 
         control.AddBranch(0, exit);
