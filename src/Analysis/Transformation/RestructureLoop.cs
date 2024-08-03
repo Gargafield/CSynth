@@ -166,7 +166,7 @@ public class RestructureLoop
          and funnels control through a single BranchBlock (B), the new exit.
         */
 
-        if (exits.Count == 1 && exits[0].Predecessors.Count == 1) {
+        if (exits.Count == 1) {
             return exits[0];
         }
 
