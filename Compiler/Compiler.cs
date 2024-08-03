@@ -33,22 +33,19 @@ public class Compiler
                 break;
             case BlockStructure block:
                 CompileBlock(block.Block);
-                foreach (var child in block.Children) {
-                    CompileStructure(child);
-                }
                 break;
         }
     }
 
     private void CompileLoop(LoopStructure loop) {
         Scopes.Push(new());
-        foreach (var structure in loop.Children) {
+        foreach (var structure in loop.Children.Take(loop.Children.Count - 1)) {
             CompileStructure(structure);
         }
 
         var body = Scopes.Pop();
-        var branch = body.Last() as BranchStatement;
-        body.RemoveAt(body.Count - 1);
+        var block = loop.Children.Last() as BlockStructure;
+        var branch = block!.Block as BranchBlock;
 
         Statements.Add(new DoWhileStatement(
             -1,
@@ -58,12 +55,9 @@ public class Compiler
     }
 
     private void CompileBranch(BranchStructure structure) {
-        CompileBlock(structure.Block);
 
         var conditions = new List<Tuple<Expression, List<Statement>>>();
-        var branch = Statements.Last() as BranchStatement;
-        Statements.RemoveAt(Statements.Count - 1);
-
+        var branch = structure.Block as BranchBlock;
 
         var counter = 0;
         foreach (var child in structure.Children) {
@@ -95,6 +89,10 @@ public class Compiler
             case BasicBlock basic:
                 Statements.AddRange(basic.Statements);
                 break;
+            case BranchBlock branch: {
+                // Ignore?
+                break;
+            }
             case EntryBlock entry:
             case ExitBlock exit:
                 break;

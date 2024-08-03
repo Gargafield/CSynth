@@ -121,6 +121,23 @@ public class Translator {
                     _statements.Add(new ReturnStatement(instruction.Offset, null));
                 }
                 break;
+            case Code.Clt:
+            case Code.Cgt:
+            case Code.Ceq: {
+                var right = _expressions.Pop();
+                var left = _expressions.Pop();
+                _expressions.Push(new BinaryExpression(left, right, instruction.OpCode.Name));
+                break;
+            }
+            case Code.Brtrue_S: {
+                var target = (Instruction)instruction.Operand;
+                var condition = _expressions.Pop();
+                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", condition));
+                _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
+                break;
+            }
+            default:
+                throw new NotImplementedException(instruction.OpCode.Name);
         }
     }
 }

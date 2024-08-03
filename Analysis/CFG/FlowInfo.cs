@@ -3,7 +3,7 @@
 public class FlowInfo
 {
     public CFG CFG { get; set; } = new();
-    public List<Block> Blocks { get; set; } = new();
+    public List<BasicBlock> Blocks { get; set; } = new();
 
     private HashSet<int> blockOffsets { get; set; } = new();
     private Dictionary<int, List<int>> targets { get; set; } = new();
@@ -35,12 +35,12 @@ public class FlowInfo
         foreach (var statement in statements) {
 
             if (statement is BranchStatement branch) {
-                blockOffsets.Add(branch.Offset - 1);
                 AddTarget(branch.Offset, branch.Target);
                 AddTarget(branch.Offset, branch.Offset + 1);
             }
             else if (statement is GotoStatement @goto) {
                 AddTarget(@goto.Offset, @goto.Target);
+                blockOffsets.Add(@goto.Offset + 1);
             }
             else if (statement is ReturnStatement @return) {
                 AddTarget(@return.Offset, -1);
@@ -58,7 +58,8 @@ public class FlowInfo
         var orderedOffsets = blockOffsets.OrderBy(x => x)
             .Take(blockOffsets.Count);
         var offsets = orderedOffsets.Zip(orderedOffsets.Skip(1), (start, end) => (start, end)).ToList();
-        var targets = new Dictionary<Block, List<int>>();
+        
+        var offsetMap = new Dictionary<int, Block>();
 
         var entry = EntryBlock.Create(CFG);
 
@@ -66,47 +67,50 @@ public class FlowInfo
         foreach (var (start, end) in offsets) {
             var blockStatements = statements.Where(x => x.Offset >= start && x.Offset < end).ToList();
 
-            Block block;
+            if (blockStatements.Count == 0)
+                continue;
 
-            var last = blockStatements.Last();
-            if (last is BranchStatement branch && blockStatements.Count == 1) {
-                block = BranchBlock.Create(CFG, branch.Variable);
-                targets[block] = new List<int> { branch.Target, branch.Offset + 1 };
-            }
-            else {
-                block = BasicBlock.Create(CFG, blockStatements);
-                targets[block] = this.targets[last.Offset];
-            }
-
+            var block = BasicBlock.Create(CFG, blockStatements);
             Blocks.Add(block);
+            offsetMap[start] = block;
+
+            if (!targets.ContainsKey(blockStatements.Last().Offset)) {
+                // Add target to next block
+                AddTarget(blockStatements.Last().Offset, end);
+            }
         }
 
         entry.AddTarget(Blocks[0]);
         var exit = ExitBlock.Create(CFG);
 
-        // Add targets to blocks
+        // Connect blocks
         foreach (var block in Blocks) {
-            if (targets.ContainsKey(block)) {
-                foreach (var targetOffset in targets[block]) {
+            var last = block.Statements.Last();
+            var targets = this.targets[last.Offset];
 
-                    if (targetOffset == -1) {
-                        block.AddTarget(exit);
-                        continue;
-                    }
+            if (last is BranchStatement branch) {
+                block.Statements.RemoveAt(block.Statements.Count - 1);
 
-                    var targetBlock = Blocks.First(x => x.Offset >= targetOffset);
-                    block.AddTarget(targetBlock);
+                var mediator = BranchBlock.Create(CFG, branch.Variable);
+                block.AddTarget(mediator);
+
+                foreach (var target in targets) {
+                    mediator.AddTarget(offsetMap[target]);
                 }
             }
-            else {
-                var nextBlock = Blocks.First(x => x.Offset > lastInstruction.Offset);
-                block.AddTarget(nextBlock);
-            }
-        }
+            else if (last is GotoStatement @goto) {
+                block.Statements.RemoveAt(block.Statements.Count - 1);
 
-        // Remove Branch and Goto statements
-        foreach (var block in Blocks) {
-            block.Statements.RemoveAll(x => x is BranchStatement || x is GotoStatement);
+                block.AddTarget(offsetMap[@goto.Target]);
+            }
+            else if (last is ReturnStatement @return) {
+                block.AddTarget(exit);
+            }
+            else {
+                foreach (var target in targets) {
+                    block.AddTarget(offsetMap[target]);
+                }
+            }
         }
     }
 }
