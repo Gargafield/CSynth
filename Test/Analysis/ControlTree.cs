@@ -41,7 +41,6 @@ public class ControlTreeTest
             CSynth.Analysis.BlockStructure
           CSynth.Analysis.BlockStructure
           CSynth.Analysis.BlockStructure
-        
         """;
 
         var result = controlTree.ToString();
