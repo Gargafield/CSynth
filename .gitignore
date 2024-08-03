@@ -1,5 +1,5 @@
 
-run.ps1 run.sh run.cmd run.bat
+run.*
 
 *.swp
 *.*~

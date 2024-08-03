@@ -6,8 +6,7 @@ namespace CSynth.Test;
 
 public class ExamplesTest
 {
-
-    public void Example1() {
+    internal static void Example1() {
         for (int i = 0; i < 5; i++) {
             Console.WriteLine("Hello, World!");
         }
@@ -31,7 +30,7 @@ public class ExamplesTest
     
     """;
 
-    static AssemblyDefinition Assembly = AssemblyDefinition.ReadAssembly("Test.dll");
+    static AssemblyDefinition Assembly = AssemblyDefinition.ReadAssembly("CSynth.Test.dll");
     private MethodDefinition GetMethodDefinition(string methodName) {
         var module = Assembly.MainModule;
         var type = module.GetType("CSynth.Test.ExamplesTest");

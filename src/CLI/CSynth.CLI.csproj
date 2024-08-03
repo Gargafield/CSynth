@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj" />
-    <ProjectReference Include="..\AST\AST.csproj" />
+    <ProjectReference Include="..\Analysis\CSynth.Analysis.csproj" />
+    <ProjectReference Include="..\AST\CSynth.AST.csproj" />
   </ItemGroup>
   
 

@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AST\AST.csproj" />
+    <ProjectReference Include="..\AST\CSynth.AST.csproj" />
   </ItemGroup>
 
 </Project>
