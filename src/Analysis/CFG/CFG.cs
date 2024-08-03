@@ -80,6 +80,35 @@ public class CFG : IEnumerable<Block> {
         }
     }
 
+    public string ToDot() {
+        // https://github.com/Rerumu/Flow-Structurer/blob/trunk/fuzz/fuzz_targets/sample/list.rs#L53
+        var builder = new StringBuilder();
+
+        builder.AppendLine("digraph G {");
+        builder.AppendLine("  node [shape = box, style = filled, ordering = out];");
+
+        foreach (var block in Blocks) {
+            var label = block switch {
+                BasicBlock basicBlock => string.Join(Environment.NewLine, basicBlock.Statements),
+                BranchBlock branchBlock => $"Branch {branchBlock.Variable}",
+                _ => ""
+            };
+            var regionId = Regions.LastOrDefault(r => r.Blocks.Contains(block))?.Id;
+            var group = regionId == null ? "" : $"{regionId}";
+
+            
+            builder.AppendLine($"  N{block.Id} [xlabel = {block.Id}, label = \"{label.Replace('"', '\'')}\", group = \"{group}\"];");
+            
+            foreach (var target in block.Successors) {
+                builder.AppendLine($"  N{block.Id} -> N{target.Id};");
+            }
+        }
+
+        builder.AppendLine("}");
+
+        return builder.ToString();
+    }
+
     public string ToMermaid() {
         var builder = new StringBuilder();
         builder.AppendLine("graph TD");

@@ -38,19 +38,26 @@ public class Program
         var cfg = flowInfo.CFG;
 
         if (debug) {
-            cfg.PrintMermaid();
+            Console.WriteLine(cfg.ToDot());
         }
 
         Restructure.RestructureCFG(cfg);
 
         if (debug) {
-            cfg.PrintMermaid();
+            Console.WriteLine(cfg.ToDot());
         }
 
         var tree = ControlTree.From(cfg);
-        Console.WriteLine(tree.ToString());
+        if (debug) {
+            Console.WriteLine(tree.ToString());
+        }
 
         var output = Compiler.Compile(tree);
+
+        if (debug) {
+            foreach (var statement in output)
+                Console.WriteLine(statement);
+        }
         
         Console.WriteLine(LuauWriter.Write(output));
     }
