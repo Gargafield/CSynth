@@ -1,10 +1,6 @@
-﻿using System.Text;
-using CSynth.Analysis;
-using CSynth.AST;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
+﻿using CSynth.AST;
 
-namespace CSynth.Compiler;
+namespace CSynth.Analysis;
 
 public class Compiler
 {
