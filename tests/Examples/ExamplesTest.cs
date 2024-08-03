@@ -6,18 +6,12 @@ namespace CSynth.Test;
 
 public class ExamplesTest
 {
-    internal static void Example1() {
-        for (int i = 0; i < 5; i++) {
-            Console.WriteLine("Hello, World!");
-        }
-    }
     private const string ExpectedExample1 = """
-    local loc0, loc1, condition, result, LoopControl
+    local loc0, condition, result, LoopControl
 
     loc0 = 0
     repeat
-        loc1 = loc0 < 5
-        condition = loc1
+        condition = loc0 < 5
         if condition then
             result = WriteLine("Hello, World!")
             loc0 = loc0 + 1
@@ -30,10 +24,10 @@ public class ExamplesTest
     
     """;
 
-    static AssemblyDefinition Assembly = AssemblyDefinition.ReadAssembly("CSynth.Test.dll");
+    static AssemblyDefinition Assembly = AssemblyDefinition.ReadAssembly("Examples.dll");
     private MethodDefinition GetMethodDefinition(string methodName) {
         var module = Assembly.MainModule;
-        var type = module.GetType("CSynth.Test.ExamplesTest");
+        var type = module.GetType("Examples.Examples");
         return type.Methods.First(m => m.Name == methodName);
     }
 
@@ -49,5 +43,11 @@ public class ExamplesTest
         var result = TestMethod("Example1");
         Assert.Equal(ExpectedExample1, result);
     }
+
+    // [Fact]
+    // public void TestExample2() {
+    //     var result = TestMethod("Example2");
+    //     Assert.Equal(ExpectedExample2, result);
+    // }
 
 }
