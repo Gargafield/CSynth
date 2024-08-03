@@ -22,11 +22,11 @@ public class RestructureBranch
         var stack = new Stack<Block>();
         stack.Push(cfg.Blocks.First());
 
-        while (stack.Peek() != null) {
+        while (stack.Count > 0) {
             var head = stack.Pop();
             var branch = restructure.FindBranch(head);
             if (branch == null)
-                break;
+                continue;
             
             restructure.branch = branch;
             restructure.RestructureSingle();
