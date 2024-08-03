@@ -30,7 +30,12 @@ public class ILTranslator {
         { "cgt.un", Operator.GreaterThanOrEqual },
         { "clt.un", Operator.LessThanOrEqual },
         { "and", Operator.And },
-        { "or", Operator.Or }
+        { "or", Operator.Or },
+        { "beq.s", Operator.Equal },
+        { "blt.s", Operator.LessThan },
+        { "bgt.s", Operator.GreaterThan },
+        { "ble.s", Operator.LessThanOrEqual },
+        { "bge.s", Operator.GreaterThanOrEqual },
     };
 
     private void TranslateInstruction(Instruction instruction) {
@@ -120,11 +125,12 @@ public class ILTranslator {
                 _statements.Add(new GotoStatement(instruction.Offset, target.Offset));
                 break;
             }
-            case Code.Blt_S: {
+            case Code.Blt_S:
+            case Code.Beq_S: {
                 var target = (Instruction)instruction.Operand;
                 var right = _expressions.Pop();
                 var left = _expressions.Pop();
-                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", new BinaryExpression(left, right, Operator.LessThan)));
+                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name])));
                 _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
                 break;
             }
