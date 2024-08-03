@@ -1,4 +1,6 @@
-﻿using CSynth.AST;
+﻿using CSynth.Analysis.Transformation;
+using CSynth.AST;
+using Mono.Cecil.Cil;
 
 namespace CSynth.Analysis;
 
@@ -8,12 +10,28 @@ public class Compiler
     public Stack<List<Statement>> Scopes { get; } = new();
     public List<Statement> Statements => Scopes.Peek();
 
-    public Compiler(ControlTree tree) {
+    private Compiler(ControlTree tree) {
         this.tree = tree;
         Scopes.Push(new());
     }
 
-    public void Compile() {
+    public static List<Statement> Compile(ICollection<Instruction> instructions) {
+        var statements = ILTranslator.Translate(instructions);
+        var flow = FlowInfo.From(statements);
+        Restructure.RestructureCFG(flow.CFG);
+        var tree = ControlTree.From(flow.CFG);
+        var compiler = new Compiler(tree);
+        compiler.Compile();
+        return compiler.Statements;
+    }
+
+    public static List<Statement> Compile(ControlTree tree) {
+        var compiler = new Compiler(tree);
+        compiler.Compile();
+        return compiler.Statements;
+    }
+
+    private void Compile() {
         CompileStructure(tree.Structure);
     }
 

@@ -8,21 +8,26 @@ public class LuauWriter {
     private HashSet<string> variables = new();
     private StringBuilder builder = new();
     private int indent = 0;
+    private string IndentString => new string(' ', indent * 4);
 
-    public LuauWriter(List<Statement> statements) {
+    private LuauWriter(List<Statement> statements) {
         this.statements = statements;
     }
 
-    private string IndentString => new string(' ', indent * 4);
+    public static string Write(List<Statement> statements) {
+        var writer = new LuauWriter(statements);
+        return writer.Write();
+    }
 
-    public void Write() {
+
+    public string Write() {
         foreach (var statement in statements) {
             ProcessStatement(statement);
         } 
         
         var declaration = string.Join(", ", variables);
-        builder.Insert(0, $"{IndentString}local {declaration}\n\n");
-        Console.WriteLine(builder.ToString());
+        builder.Insert(0, $"{IndentString}local {declaration}{Environment.NewLine}{Environment.NewLine}");
+        return builder.ToString();
     }
 
     private void ProcessStatement(Statement statement) {

@@ -50,10 +50,8 @@ public class Program
         var tree = ControlTree.From(cfg);
         Console.WriteLine(tree.ToString());
 
-        var compiler = new Compiler(tree);
-        compiler.Compile();
-
-        var writer = new LuauWriter(compiler.Statements);
-        writer.Write();
+        var output = Compiler.Compile(tree);
+        
+        Console.WriteLine(LuauWriter.Write(output));
     }
 }
