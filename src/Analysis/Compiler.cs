@@ -9,6 +9,10 @@ public class Compiler
     private ControlTree tree;
     public Stack<List<Statement>> Scopes { get; } = new();
     public List<Statement> Statements => Scopes.Peek();
+    public Dictionary<string, Type> Variables { get; } = new() {
+        { "HeaderExit", typeof(int) },
+        { "LoopExit", typeof(bool) }
+    };
 
     private Compiler(ControlTree tree) {
         this.tree = tree;
@@ -84,8 +88,21 @@ public class Compiler
             Scopes.Push(new());
             CompileStructure(child);
 
+            Expression? expression = null;
+            if (first) {
+                var type = Variables.TryGetValue(branch!.Variable, out var t) ? t : typeof(bool);
+                expression = new VariableExpression(branch.Variable);
+                if (type == typeof(int)) {
+                    expression = new BinaryExpression(
+                        expression,
+                        new NumberExpression(1),
+                        Operator.Equal
+                    );
+                }
+            }
+
             conditions.Add(new Tuple<Expression?, List<Statement>>(
-                first ? new VariableExpression(branch!.Variable) : null,
+                expression,
                 Scopes.Pop()
             ));
             first = false;
