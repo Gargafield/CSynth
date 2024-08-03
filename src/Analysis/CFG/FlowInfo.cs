@@ -34,15 +34,20 @@ public class FlowInfo
     private void Build(ICollection<Statement> statements) {
         blockOffsets.Add(0);
 
-        foreach (var statement in statements) {
+        for (int i = 0; i < statements.Count; i++) {
+            var statement = statements.ElementAt(i);
 
             if (statement is BranchStatement branch) {
                 AddTarget(branch.Offset, branch.Target);
-                AddTarget(branch.Offset, branch.Offset + 1);
+
+                var next = statements.ElementAt(i + 1);
+                AddTarget(branch.Offset, next.Offset);
             }
             else if (statement is GotoStatement @goto) {
                 AddTarget(@goto.Offset, @goto.Target);
-                blockOffsets.Add(@goto.Offset + 1);
+
+                var next = statements.ElementAt(i + 1);
+                blockOffsets.Add(next.Offset);
             }
             else if (statement is ReturnStatement @return) {
                 AddTarget(@return.Offset, -1);
@@ -62,6 +67,10 @@ public class FlowInfo
         var offsets = orderedOffsets.Zip(orderedOffsets.Skip(1), (start, end) => (start, end)).ToList();
         
         var offsetMap = new Dictionary<int, Block>();
+
+        Block FindBlock(int offset) {
+            return offsetMap.FirstOrDefault(x => x.Key >= offset).Value;
+        }
 
         var entry = EntryBlock.Create(CFG);
 
@@ -96,8 +105,9 @@ public class FlowInfo
                 var mediator = BranchBlock.Create(CFG, branch.Variable);
                 block.AddTarget(mediator);
 
+                var counter = 2;
                 foreach (var target in targets) {
-                    mediator.AddTarget(offsetMap[target]);
+                    mediator.AddBranch(counter--, FindBlock(target));
                 }
             }
             else if (last is GotoStatement @goto) {
@@ -110,7 +120,7 @@ public class FlowInfo
             }
             else {
                 foreach (var target in targets) {
-                    block.AddTarget(offsetMap[target]);
+                    block.AddTarget(FindBlock(target));
                 }
             }
         }
