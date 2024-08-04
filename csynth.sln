@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSynth.Analysis", "src\Anal
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSynth.Test", "tests\CSynth.Test.csproj", "{F23B122F-CAA4-4785-BCB3-2873E1836571}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSynth.Bench", "bench\CSynth.Bench.csproj", "{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{F23B122F-CAA4-4785-BCB3-2873E1836571}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F23B122F-CAA4-4785-BCB3-2873E1836571}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F23B122F-CAA4-4785-BCB3-2873E1836571}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
