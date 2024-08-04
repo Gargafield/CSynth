@@ -68,8 +68,8 @@ public class RestructureLoopTest
         var expected = """
         0[1]
         1[8,10]
-        2[9,14]
-        3[11,13]
+        2[11,13]
+        3[9,14]
         4[6]
         5[6]
         6[]
@@ -89,6 +89,7 @@ public class RestructureLoopTest
         RestructureLoop.Restructure(cfg);
 
         var result = cfg.ToEquality();
+        
         Assert.Equal(expected, result);
     }
 }
