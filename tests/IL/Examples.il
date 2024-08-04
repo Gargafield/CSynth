@@ -38,6 +38,9 @@
         ldstr "Hello, World!"
         call void [mscorlib]System.Console::WriteLine(string)
         ldloc.0
+        ldc.i4.2
+        beq.s IL_001a
+        ldloc.0
         ldc.i4.1
         add
         stloc.0
@@ -45,6 +48,7 @@
         ldloc.0
         ldc.i4.5
         blt.s IL_0004
+    IL_001a:
         ret
     }
 }

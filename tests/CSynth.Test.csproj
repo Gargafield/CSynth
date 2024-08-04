@@ -22,9 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\src\Analysis\CSynth.Analysis.csproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
     <ProjectReference Include=".\IL\IL.ilproj" />
   </ItemGroup>
 

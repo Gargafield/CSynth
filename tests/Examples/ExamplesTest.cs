@@ -24,7 +24,30 @@ public class ExamplesTest
     
     """;
 
-    static AssemblyDefinition Assembly = AssemblyDefinition.ReadAssembly("Examples.dll");
+    private const string ExpectedExample2 = """
+    local loc0, condition, result, LoopControl
+
+    loc0 = 0
+    repeat
+        condition = loc0 < 5
+        if condition then
+            result = WriteLine("Hello, World!")
+            condition = loc0 == 2
+            if condition then
+                LoopControl = false
+            else
+                loc0 = loc0 + 1
+                LoopControl = true
+            end
+        else
+            LoopControl = false
+        end
+    until not LoopControl
+    return result
+
+    """;
+
+    static AssemblyDefinition Assembly = AssemblyDefinition.ReadAssembly("IL.dll");
     private MethodDefinition GetMethodDefinition(string methodName) {
         var module = Assembly.MainModule;
         var type = module.GetType("Examples.Examples");
@@ -44,10 +67,10 @@ public class ExamplesTest
         Assert.Equal(ExpectedExample1, result);
     }
 
-    // [Fact]
-    // public void TestExample2() {
-    //     var result = TestMethod("Example2");
-    //     Assert.Equal(ExpectedExample2, result);
-    // }
+    [Fact]
+    public void TestExample2() {
+        var result = TestMethod("Example2");
+        Assert.Equal(ExpectedExample2, result);
+    }
 
 }

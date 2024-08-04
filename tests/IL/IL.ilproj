@@ -2,12 +2,5 @@
   <Sdk Name="Microsoft.NET.Sdk.IL" Version="8.0.0" />
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
-
-  <!-- Only include *.il files -->
-  <ItemGroup>
-    <Compile Include=".\Examples.il" />
-  </ItemGroup>
-
 </Project>
