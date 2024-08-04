@@ -27,7 +27,7 @@ public class RestructureBranch
             var branch = restructure.FindBranch(head);
             if (branch == null)
                 continue;
-            
+
             restructure.branch = branch;
             restructure.RestructureSingle();
 
@@ -67,6 +67,8 @@ public class RestructureBranch
                 target = NoopBlock.Create(cfg);
                 target.AddTarget(control);
                 region.Blocks.Add(target);
+
+                dominance[target] = new HashSet<Block>() { control, target };
             }
 
             foreach (var continuation in continuations) {
@@ -75,6 +77,8 @@ public class RestructureBranch
                     assigment.AddVariable(variable, continuations.IndexOf(continuation));
                     exit.ReplaceTarget(continuation, assigment);
                     assigment.AddTarget(target);
+
+                    this.dominance[assigment] = new HashSet<Block>() { exit };
 
                     region.Blocks.Add(assigment);
                 }
@@ -99,6 +103,7 @@ public class RestructureBranch
                 var noop = NoopBlock.Create(cfg);
                 branch.ReplaceTarget(successor, noop);
                 noop.AddTarget(successor);
+                dominance[noop] = new HashSet<Block>() { successor };
                 blocks = new HashSet<Block>() { noop };
                 head = noop;
             }
