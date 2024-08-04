@@ -122,12 +122,13 @@ public class Compiler
             case BasicBlock basic:
                 Statements.AddRange(basic.Statements);
                 break;
-            case BranchBlock branch: {
+            case BranchBlock: {
                 // Ignore?
                 break;
             }
-            case EntryBlock entry:
-            case ExitBlock exit:
+            case EntryBlock:
+            case ExitBlock:
+            case NoopBlock:
                 break;
             default:
                 throw new NotImplementedException();
