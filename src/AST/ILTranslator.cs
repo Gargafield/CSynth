@@ -156,6 +156,14 @@ public class ILTranslator {
                 _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
                 break;
             }
+            case Code.Brfalse_S: {
+                var target = (Instruction)instruction.Operand;
+                var condition = new UnaryExpression(_expressions.Pop());
+                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", condition));
+                _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
+                break;
+            }
+            
             default:
                 throw new NotImplementedException(instruction.OpCode.Name);
         }
