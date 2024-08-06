@@ -4,7 +4,7 @@ using CSynth.Analysis.Transformation;
 
 namespace CSynth.Bench;
 
-public class RestructureBench
+public class RestructureLinearBench
 {
     [Params(10, 100, 1000)]
     public int N = 1000;

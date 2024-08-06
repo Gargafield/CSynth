@@ -99,17 +99,17 @@ public class RestructureBranch
             else {
                 // Discover all blocks that have succesesor as dominator
                 blocks = new HashSet<Block>();
-                var stack = new Stack<Block>();
-                stack.Push(successor);
+                var stack = new Queue<Block>();
+                stack.Enqueue(successor);
                 while (stack.Count > 0) {
-                    var block = stack.Pop();
+                    var block = stack.Dequeue();
                     if (blocks.Contains(block))
                         continue;
 
                     blocks.Add(block);
                     foreach (var succ in block.Successors) {
                         if (succ.Predecessors.All(p => blocks.Contains(p))) {
-                            stack.Push(succ);
+                            stack.Enqueue(succ);
                         }
                     }
                 }

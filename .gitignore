@@ -4,6 +4,9 @@ bench.*
 
 BenchmarkDotNet.Artifacts/
 
+*.nettrace
+*.speedscope.json
+
 *.swp
 *.*~
 project.lock.json

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
@@ -7,16 +8,14 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var config = DefaultConfig.Instance;
-        // var summary = BenchmarkRunner.Run<RestrucureBench>(config, args);
-
-        // Use this to select benchmarks from the console:
-        if (!args.Contains("--trace"))
+        if (!args.Contains("--trace")) {
+            var config = DefaultConfig.Instance;
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
+        }
         else {
-            var benchMark = new RestructureBench();
+            var benchMark = new RestructureComplexBench();
             benchMark.Setup();
-            benchMark.RestructureLinear();
+            benchMark.RestructureComplex();
         }
 
     }
