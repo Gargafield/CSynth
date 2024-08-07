@@ -85,6 +85,7 @@ public class Compiler
         
         var first = true;
         foreach (var child in structure.Children) {
+            var condition = structure.Conditions.First(c => c.Item1 == child).Item2;
             Scopes.Push(new());
             CompileStructure(child);
 
@@ -92,10 +93,14 @@ public class Compiler
             if (first) {
                 var type = Variables.TryGetValue(branch!.Variable, out var t) ? t : typeof(bool);
                 expression = new VariableExpression(branch.Variable);
+                if (condition == 0) {
+                    expression = new UnaryExpression(expression);
+                }
+
                 if (type == typeof(int)) {
                     expression = new BinaryExpression(
                         expression,
-                        new NumberExpression(1),
+                        new NumberExpression(condition),
                         Operator.Equal
                     );
                 }

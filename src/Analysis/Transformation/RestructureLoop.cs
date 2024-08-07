@@ -4,7 +4,7 @@ namespace CSynth.Analysis.Transformation;
 public class RestructureLoop
 {
     private CFG cfg;
-    private HashSet<Block> loop = default!;
+    private List<Block> loop = default!;
 
     private RestructureLoop(CFG cfg) {
         this.cfg = cfg;
@@ -27,7 +27,7 @@ public class RestructureLoop
               │ │ 3 ├─╯
               │ ╰───╯
         */
-        var loops = sccs.Where(scc => scc.Count > 1 || scc.First().TargetsBlock(scc.First())).ToList();
+        var loops = sccs.Where(scc => scc.Count > 1 || scc.First().Successors.Contains(scc.First())).ToList();
 
         foreach (var loop in loops) {
             restructure.loop = loop;
@@ -126,7 +126,7 @@ public class RestructureLoop
         foreach (var block in entries) {
             counter++;
 
-            foreach (var predecessors in block.Predecessors) {
+            foreach (var predecessors in block.Predecessors.ToArray()) {
                 var assignment = AssignmentBlock.Create(cfg);
                 assignment.AddTarget(header);
                 assignment.AddVariable(variable, counter);
@@ -178,7 +178,7 @@ public class RestructureLoop
         foreach (var block in exits) {
             counter++;
 
-            foreach (var predecessors in block.Predecessors.Intersect(loop)) {
+            foreach (var predecessors in block.Predecessors.Intersect(loop).ToArray()) {
                 var assignment = AssignmentBlock.Create(cfg);
                 assignment.AddTarget(exit);
                 assignment.AddVariable(exitVariable, counter);
@@ -236,7 +236,7 @@ public class RestructureLoop
             assignment.AddVariable(variable, true);
         }
 
-        foreach (var predecessors in exit.Predecessors) {
+        foreach (var predecessors in exit.Predecessors.ToArray()) {
             if (predecessors is AssignmentBlock assignment) {
                 assignment.ReplaceTarget(exit, control);
             }

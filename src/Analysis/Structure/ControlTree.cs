@@ -20,10 +20,10 @@ public class ControlTree {
     }
 
     private void Build() {
-        BuildBlocks(cfg.Blocks.First(), cfg.Blocks.ToHashSet());
+        BuildBlocks(cfg.Blocks.First(), cfg.Blocks.ToList());
     }
     
-    private void BuildBlocks(Block block, HashSet<Block> blocks) {
+    private void BuildBlocks(Block block, List<Block> blocks) {
         // Depth-first search
         var stack = new Stack<Block>();
         stack.Push(block);
@@ -50,7 +50,7 @@ public class ControlTree {
                     this.stack.Push(new LinearStructure());
                     BuildBlocks(region.Header, region.Blocks);
                     var structure = this.stack.Pop();
-                    Structure.Children.Add(structure);
+                    (Structure as BranchStructure)!.AddCondition(structure, region.Condition);
                 }
 
                 var branchStruct = this.stack.Pop();

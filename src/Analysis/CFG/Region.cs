@@ -5,24 +5,18 @@ namespace CSynth.Analysis;
 public enum RegionId : uint { }
 
 public abstract class Region {
-    public RegionId Id { get; set; }
-    public HashSet<Block> Blocks { get; set; } = new();
-
-    protected Region(RegionId id) {
-        Id = id;
-    }
+    public int Id { get; set; }
+    public List<Block> Blocks { get; set; } = new();
 }
 
-public class RegionCollection : AbstractCollection<Region> {
+public class RegionCollection : List<Region> {
     public RegionCollection() { }
 
-    public Region this[RegionId id] => _items[(int)id];
-
-    public T Add<T>(Func<RegionId, T> factory)
-        where T : Region
+    public T Add<T>(T region)
+    where T: Region
     {
-        var region = factory((RegionId)getId());
-        _items.Add(region);
+        region.Id = Count;
+        base.Add(region);
         return region;
     }
 }
@@ -31,15 +25,14 @@ public class LoopRegion : Region {
     public Block Header { get; set; }
     public Block Control { get; set; }
 
-    private LoopRegion(RegionId id, HashSet<Block> blocks, Block header, Block control) : base(id) {
+    private LoopRegion(List<Block> blocks, Block header, Block control) {
         Blocks = blocks;
         Header = header;
         Control = control;
     }
 
-    public static LoopRegion Create(CFG cfg, HashSet<Block> blocks, Block header, Block control) {
-        var region = cfg.Regions.Add(id => new LoopRegion(id, blocks, header, control));
-        return region;
+    public static LoopRegion Create(CFG cfg, List<Block> blocks, Block header, Block control) {
+        return cfg.Regions.Add(new LoopRegion(blocks, header, control));
     }
 
     public void RemoveBackedge() {
@@ -58,18 +51,20 @@ public class BranchRegion : Region {
 
     public class Region : IEnumerable<Block> {
         public Block Header;
-        public HashSet<Block> Blocks;
+        public List<Block> Blocks;
+        public int Condition { get; set; }
 
-        public Region(Block header, HashSet<Block> blocks) {
+        public Region(Block header, List<Block> blocks, int condition) {
             Header = header;
             Blocks = blocks;
+            Condition = condition;
         }
 
         public IEnumerator<Block> GetEnumerator() => Blocks.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    private BranchRegion(RegionId id, HashSet<Block> blocks, Block header, Block exit, List<Region> regions) : base(id) {
+    private BranchRegion(List<Block> blocks, Block header, Block exit, List<Region> regions) {
         Blocks = blocks;
         Header = header;
         Exit = exit;
@@ -77,11 +72,11 @@ public class BranchRegion : Region {
     }
 
     public static BranchRegion Create(CFG cfg, Block header, Block exit, List<Region> regions) {
-        var blocks = regions.SelectMany(region => region).ToHashSet();
+        var blocks = regions.SelectMany(region => region).ToList();
         blocks.Add(header);
         blocks.Add(exit);
         
-        var region = cfg.Regions.Add(id => new BranchRegion(id, blocks, header, exit, regions));
+        var region = cfg.Regions.Add(new BranchRegion(blocks, header, exit, regions));
         return region;
     }
 

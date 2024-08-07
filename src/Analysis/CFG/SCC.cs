@@ -14,7 +14,7 @@ public static class SCC {
         stack.Push(node);
     }
 
-    public static void ConnectSCC(Block node, HashSet<Block> scc, HashSet<Block> visited) {
+    public static void ConnectSCC(Block node, List<Block> scc, HashSet<Block> visited) {
         visited.Add(node);
         scc.Add(node);
 
@@ -25,7 +25,7 @@ public static class SCC {
         }
     }
 
-    public static List<HashSet<Block>> ComputeSCC(CFG cfg) {
+    public static List<List<Block>> ComputeSCC(CFG cfg) {
         
         var visited = new HashSet<Block>();
         var stack = new Stack<Block>();
@@ -36,15 +36,14 @@ public static class SCC {
         }
 
         visited.Clear();
-        var result = new List<HashSet<Block>>();
+        var result = new List<List<Block>>();
 
         while (stack.Count > 0) {
             var node = stack.Pop();
             if (visited.Contains(node))
                 continue;
-            
 
-            var scc = new HashSet<Block>();
+            var scc = new List<Block>();
             ConnectSCC(node, scc, visited);
 
             result.Add(scc);

@@ -15,7 +15,14 @@ public class BlockStructure : Structure {
 }
 
 public class BranchStructure : BlockStructure {
+    public List<(Structure, int)> Conditions { get; set; } = new();
+
     public BranchStructure(Block block) : base(block) {}
+
+    public void AddCondition(Structure structure, int value) {
+        Conditions.Add((structure, value));
+        Children.Add(structure);
+    }
 }
 
 public class LoopStructure : Structure {

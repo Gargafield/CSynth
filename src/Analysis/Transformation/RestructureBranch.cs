@@ -4,7 +4,7 @@ namespace CSynth.Analysis.Transformation;
 public class RestructureBranch
 {
     private CFG cfg;
-    private Block branch = default!;
+    private BranchBlock branch = default!;
     private HashSet<Block> set = new();
 
     private RestructureBranch(CFG cfg) {
@@ -67,7 +67,7 @@ public class RestructureBranch
             }
 
             foreach (var continuation in continuations) {
-                foreach (var exit in continuation.Predecessors.Intersect(exits)) {
+                foreach (var exit in continuation.Predecessors.Intersect(exits).ToArray()) {
                     var assigment = AssignmentBlock.Create(cfg);
                     assigment.AddVariable(variable, continuations.IndexOf(continuation));
                     exit.ReplaceTarget(continuation, assigment);
@@ -81,24 +81,25 @@ public class RestructureBranch
         return control;
     }
 
-    private List<BranchRegion.Region> ConstructBranchRegions(Block branch) {
+    private List<BranchRegion.Region> ConstructBranchRegions(BranchBlock branch) {
         var regions = new List<BranchRegion.Region>();
         
         foreach (var successor in branch.Successors.ToList()) {
-            HashSet<Block> blocks;
+            List<Block> blocks;
             Block head = successor;
+            var condition = branch.Branches.First(b => b.Item1 == successor).Item2;
 
             if (successor.Predecessors.Count > 1) {
                 // Empty branch region, construct noop
                 var noop = NoopBlock.Create(cfg);
                 branch.ReplaceTarget(successor, noop);
                 noop.AddTarget(successor);
-                blocks = new HashSet<Block>() { noop };
+                blocks = new List<Block>() { noop };
                 head = noop;
             }
             else {
                 // Discover all blocks that have succesesor as dominator
-                blocks = new HashSet<Block>();
+                blocks = new List<Block>();
                 var stack = new Queue<Block>();
                 stack.Enqueue(successor);
                 while (stack.Count > 0) {
@@ -114,16 +115,17 @@ public class RestructureBranch
                     }
                 }
             }
-            regions.Add(new BranchRegion.Region(head, blocks));
+
+            regions.Add(new BranchRegion.Region(head, blocks, condition));
         }
 
         return regions;
     }
 
-    private Block? FindBranch(Block head) {
+    private BranchBlock? FindBranch(Block head) {
         while (head != null) {
             if (head.Successors.Count > 1 && set.Contains(head)) {
-                return head;
+                return head as BranchBlock;
             }
             
             set.Remove(head);

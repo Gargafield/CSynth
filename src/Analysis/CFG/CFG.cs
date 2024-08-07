@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Text;
+using CSynth.AST;
 
 namespace CSynth.Analysis;
 
@@ -20,7 +21,7 @@ public class CFG : IEnumerable<Block> {
         var cfg = new CFG();
 
         var split = text.Split(Environment.NewLine);
-        var blocks = new Dictionary<Block, List<BlockId>>();
+        var blocks = new Dictionary<Block, List<int>>();
 
         var counter = 0;
         foreach (var line in split) {
@@ -29,28 +30,37 @@ public class CFG : IEnumerable<Block> {
             var targetStr = _split[1].Substring(0, _split[1].Length - 1);
 
             var targets = targetStr.Length == 0
-                ? Enumerable.Empty<BlockId>()
-                : targetStr.Split(',').Select(s => (BlockId)int.Parse(s));
+                ? Enumerable.Empty<int>().ToList()
+                : targetStr.Split(',').Select(s => int.Parse(s)).ToList();
 
             if (id != counter++)
                 throw new ArgumentException("Id not sorted", nameof(text));
             
-            var block = BasicBlock.Create(cfg);
-            blocks.Add(block, targets.ToList());
+            if (targets.Count > 1) {
+                var block = BranchBlock.Create(cfg, "x");
+                blocks.Add(block, targets.ToList());
+                continue;
+            }
+            else {
+                var block = NoopBlock.Create(cfg);
+                blocks.Add(block, targets.ToList());
+            }
         }
 
         foreach (var (block, targetIds) in blocks) {
+            counter = 0;
             foreach (var targetId in targetIds) {
                 var target = cfg.Blocks[targetId];
-                block.AddTarget(target);
+                if (block is BranchBlock branchBlock) {
+                    branchBlock.AddBranch(counter++, target);
+                }
+                else {
+                    block.AddTarget(target);
+                }
             }
         }
 
         return cfg;
-    }
-
-    public Block this[BlockId index] {
-        get => Blocks[index];
     }
 
     public IEnumerator<Block> GetEnumerator() {
