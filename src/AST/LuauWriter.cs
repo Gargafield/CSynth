@@ -96,6 +96,7 @@ public class LuauWriter {
         { Operator.Divide, "/" },
         { Operator.Modulo, "%" },
         { Operator.Equal, "==" },
+        { Operator.NotEqual, "~=" },
         { Operator.GreaterThan, ">" },
         { Operator.LessThan, "<" },
         { Operator.GreaterThanOrEqual, ">=" },

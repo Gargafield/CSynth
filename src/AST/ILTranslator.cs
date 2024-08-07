@@ -125,8 +125,11 @@ public class ILTranslator {
                 _statements.Add(new GotoStatement(instruction.Offset, target.Offset));
                 break;
             }
-            case Code.Blt_S:
-            case Code.Beq_S: {
+            case Code.Beq_S:
+            case Code.Bge_S:
+            case Code.Bgt_S:
+            case Code.Ble_S:
+            case Code.Blt_S: {
                 var target = (Instruction)instruction.Operand;
                 var right = _expressions.Pop();
                 var left = _expressions.Pop();
@@ -149,16 +152,17 @@ public class ILTranslator {
                 _expressions.Push(new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name]));
                 break;
             }
-            case Code.Brtrue_S: {
+            case Code.Brtrue_S:
+            case Code.Brfalse_S:{
                 var target = (Instruction)instruction.Operand;
                 var condition = _expressions.Pop();
-                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", condition));
-                _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
-                break;
-            }
-            case Code.Brfalse_S: {
-                var target = (Instruction)instruction.Operand;
-                var condition = new UnaryExpression(_expressions.Pop());
+                if (instruction.OpCode.Code == Code.Brfalse_S) {
+                    condition = new UnaryExpression(condition);
+                }
+                else {
+                    condition = new BinaryExpression(condition, new NumberExpression(0), Operator.NotEqual);
+                }
+
                 _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", condition));
                 _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
                 break;
