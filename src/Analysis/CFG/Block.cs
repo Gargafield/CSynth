@@ -21,7 +21,6 @@ public abstract class Block {
     }
 
     public virtual void ReplaceTarget(Block oldTarget, Block newTarget) {
-        if (oldTarget == newTarget) return;
         oldTarget.Predecessors.Remove(this);
         newTarget.Predecessors.Add(this);
 
