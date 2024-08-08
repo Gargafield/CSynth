@@ -20,10 +20,10 @@ public class ControlTree {
     }
 
     private void Build() {
-        BuildBlocks(cfg.Blocks.First(), cfg.Blocks.ToList());
+        BuildBlocks(cfg.Blocks.First(), cfg.Blocks.ToHashSet());
     }
     
-    private void BuildBlocks(Block block, List<Block> blocks) {
+    private void BuildBlocks(Block block, HashSet<Block> blocks) {
         // Depth-first search
         var stack = new Stack<Block>();
         stack.Push(block);

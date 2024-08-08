@@ -36,15 +36,13 @@ public class RestructureBranch
     }
 
     private void RestructureSingle() {
-        var regions = ConstructBranchRegions(branch);
-        var exit = ConstructSingleExit(regions);
+        var (regions, continuations) = ConstructBranchRegions(branch);
+        var exit = ConstructSingleExit(regions, continuations.ToList());
         
         BranchRegion.Create(cfg, branch, exit, regions);
     }
 
-    private Block ConstructSingleExit(List<BranchRegion.Region> regions) {
-        var continuations = regions.SelectMany(region => region.SelectMany(b => b.Successors.Except(region))).Distinct().ToList();
-
+    private Block ConstructSingleExit(List<BranchRegion.Region> regions, List<Block> continuations) {
         if (continuations.Count <= 1) {
             return continuations.FirstOrDefault()!;
         }
@@ -53,7 +51,7 @@ public class RestructureBranch
         var control = BranchBlock.Create(cfg, variable);
         
         for (int i = 0; i < continuations.Count; i++) {
-            control.AddTarget(continuations[i]);
+            control.AddBranch(i, continuations[i]);
         }
 
         foreach (var region in regions) {
@@ -81,37 +79,44 @@ public class RestructureBranch
         return control;
     }
 
-    private List<BranchRegion.Region> ConstructBranchRegions(BranchBlock branch) {
+    private Tuple<List<BranchRegion.Region>, HashSet<Block>> ConstructBranchRegions(BranchBlock branch) {
         var regions = new List<BranchRegion.Region>();
+        var continuations = new HashSet<Block>();
         
-        foreach (var successor in branch.Successors.ToList()) {
-            List<Block> blocks;
+        foreach (var (successor, condition) in branch.Branches.ToList()) {
+            HashSet<Block> blocks;
             Block head = successor;
-            var condition = branch.Branches.First(b => b.Item1 == successor).Item2;
 
             if (successor.Predecessors.Count > 1) {
                 // Empty branch region, construct noop
                 var noop = NoopBlock.Create(cfg);
                 branch.ReplaceTarget(successor, noop);
                 noop.AddTarget(successor);
-                blocks = new List<Block>() { noop };
+                blocks = new HashSet<Block>() { noop };
                 head = noop;
+
+                continuations.Add(successor);
             }
             else {
                 // Discover all blocks that have succesesor as dominator
-                blocks = new List<Block>();
+                blocks = new HashSet<Block>() { successor };
                 var stack = new Queue<Block>();
-                stack.Enqueue(successor);
+                foreach (var pred in successor.Successors) {
+                    stack.Enqueue(pred);
+                }
+
                 while (stack.Count > 0) {
                     var block = stack.Dequeue();
                     if (blocks.Contains(block))
                         continue;
+                    if (block.Predecessors.Any(b => !blocks.Contains(b))) {
+                        continuations.Add(block);
+                        continue;
+                    }
 
                     blocks.Add(block);
                     foreach (var succ in block.Successors) {
-                        if (succ.Predecessors.All(p => blocks.Contains(p))) {
-                            stack.Enqueue(succ);
-                        }
+                        stack.Enqueue(succ);
                     }
                 }
             }
@@ -119,7 +124,7 @@ public class RestructureBranch
             regions.Add(new BranchRegion.Region(head, blocks, condition));
         }
 
-        return regions;
+        return Tuple.Create(regions, continuations);
     }
 
     private BranchBlock? FindBranch(Block head) {

@@ -51,10 +51,10 @@ public class BranchRegion : Region {
 
     public class Region : IEnumerable<Block> {
         public Block Header;
-        public List<Block> Blocks;
+        public HashSet<Block> Blocks;
         public int Condition { get; set; }
 
-        public Region(Block header, List<Block> blocks, int condition) {
+        public Region(Block header, HashSet<Block> blocks, int condition) {
             Header = header;
             Blocks = blocks;
             Condition = condition;
