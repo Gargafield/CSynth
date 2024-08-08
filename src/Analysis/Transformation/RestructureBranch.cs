@@ -12,7 +12,6 @@ public class RestructureBranch
     }
 
     public static void Restructure(CFG cfg) {
-
         var restructure = new RestructureBranch(cfg);
 
         restructure.set = cfg.Blocks.ToHashSet();
@@ -37,7 +36,12 @@ public class RestructureBranch
 
     private void RestructureSingle() {
         var (regions, continuations) = ConstructBranchRegions(branch);
-        var exit = ConstructSingleExit(regions, continuations.ToList());
+
+        Block exit;
+        if (continuations.Count > 1)
+            exit = ConstructSingleExit(regions, continuations.ToList());
+        else
+            exit = continuations.First();
         
         BranchRegion.Create(cfg, branch, exit, regions);
     }
@@ -101,22 +105,23 @@ public class RestructureBranch
                 // Discover all blocks that have succesesor as dominator
                 blocks = new HashSet<Block>() { successor };
                 var stack = new Queue<Block>();
-                foreach (var pred in successor.Successors) {
-                    stack.Enqueue(pred);
-                }
+                stack.Enqueue(successor);
 
                 while (stack.Count > 0) {
                     var block = stack.Dequeue();
-                    if (blocks.Contains(block))
-                        continue;
-                    if (block.Predecessors.Any(b => !blocks.Contains(b))) {
-                        continuations.Add(block);
-                        continue;
-                    }
 
                     blocks.Add(block);
                     foreach (var succ in block.Successors) {
-                        stack.Enqueue(succ);
+                        if (!blocks.Contains(succ) && succ.Predecessors.All(blocks.Contains))
+                            stack.Enqueue(succ);
+                    }
+                }
+
+                 // Find continuations in blocks
+                foreach (var block in blocks) {
+                    foreach (var succ in block.Successors) {
+                        if (!blocks.Contains(succ))
+                            continuations.Add(succ);
                     }
                 }
             }
@@ -132,7 +137,7 @@ public class RestructureBranch
             if (head.Successors.Count > 1 && set.Contains(head)) {
                 return head as BranchBlock;
             }
-            
+
             set.Remove(head);
             head = head.Successors.FirstOrDefault()!;
         }
