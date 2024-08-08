@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using CSynth.Analysis.Transformation;
 using CSynth.AST;
+using CSynth.Transformation;
 using Mono.Cecil.Cil;
 
 namespace CSynth.Analysis;

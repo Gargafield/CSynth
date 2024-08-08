@@ -1,5 +1,6 @@
 ﻿using CSynth.Analysis;
-using CSynth.Analysis.Transformation;
+using CSynth.AST;
+using CSynth.Transformation;
 
 namespace CSynth.Test;
 

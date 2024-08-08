@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
-using CSynth.Analysis;
-using CSynth.Analysis.Transformation;
+﻿using CSynth.Analysis;
+using CSynth.AST;
+using CSynth.Transformation;
 
 namespace CSynth.Test;
 

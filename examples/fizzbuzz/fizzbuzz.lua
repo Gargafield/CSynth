@@ -21,10 +21,10 @@ repeat
             result = Console.WriteLine("FizzBuzz")
         end
         loc0 = loc0 + 1
-        LoopControl = true
+        LoopControl = 1
     else
-        LoopControl = false
+        LoopControl = 0
     end
-until not LoopControl
+until LoopControl == 0
 return result
 

@@ -15,11 +15,11 @@ public class ExamplesTest
         if condition then
             result = Console.WriteLine("Hello, World!")
             loc0 = loc0 + 1
-            LoopControl = true
+            LoopControl = 1
         else
-            LoopControl = false
+            LoopControl = 0
         end
-    until not LoopControl
+    until LoopControl == 0
     return result
     
     """;
@@ -34,15 +34,15 @@ public class ExamplesTest
             result = Console.WriteLine("Hello, World!")
             condition = loc0 == 2
             if condition then
-                LoopControl = false
+                LoopControl = 0
             else
                 loc0 = loc0 + 1
-                LoopControl = true
+                LoopControl = 1
             end
         else
-            LoopControl = false
+            LoopControl = 0
         end
-    until not LoopControl
+    until LoopControl == 0
     return result
 
     """;

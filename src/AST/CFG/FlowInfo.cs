@@ -1,6 +1,6 @@
 ﻿using CSynth.AST;
 
-namespace CSynth.Analysis;
+namespace CSynth.AST;
 
 public class FlowInfo
 {
@@ -102,7 +102,7 @@ public class FlowInfo
             if (last is BranchStatement branch) {
                 block.Statements.RemoveAt(block.Statements.Count - 1);
 
-                var mediator = BranchBlock.Create(CFG, branch.Variable);
+                var mediator = BranchBlock.Create(CFG.Blocks, branch.Variable);
                 block.AddTarget(mediator);
 
                 var counter = 2;

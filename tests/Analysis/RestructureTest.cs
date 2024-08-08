@@ -1,6 +1,5 @@
-using System;
-using CSynth.Analysis;
-using CSynth.Analysis.Transformation;
+using CSynth.AST;
+using CSynth.Transformation;
 
 namespace CSynth.Test;
 
@@ -19,22 +18,27 @@ public class RestructureTest
         var expected = """
         0[1]
         1[6,7,8,10]
-        2[14]
+        2[18]
         3[]
-        4[12]
-        5[3,13,15]
-        6[9]
-        7[9]
-        8[9]
+        4[16]
+        5[3,15,17]
+        6[11]
+        7[12]
+        8[13]
         9[1,5]
         10[9]
-        11[2,4]
-        12[17]
-        13[11]
-        14[17]
-        15[11]
-        16[]
-        17[11,16]
+        11[9]
+        12[9]
+        13[9]
+        14[2,4]
+        15[14]
+        16[21]
+        17[14]
+        18[22]
+        19[]
+        20[14,19]
+        21[20]
+        22[20]
         """;
 
         var cfg = CFG.FromEquality(graph);

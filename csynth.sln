@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSynth.Test", "tests\CSynth
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSynth.Bench", "bench\CSynth.Bench.csproj", "{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSynth.Transformation", "src\Transformation\CSynth.Transformation.csproj", "{298915EE-5928-4009-A556-48AC0D2DC336}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F41BE8D4-FCE1-48C0-B7C4-B474A2D27BAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{298915EE-5928-4009-A556-48AC0D2DC336}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{298915EE-5928-4009-A556-48AC0D2DC336}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{298915EE-5928-4009-A556-48AC0D2DC336}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{298915EE-5928-4009-A556-48AC0D2DC336}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,6 +55,7 @@ Global
 		{AA8D03D3-3A64-4CAC-AA01-EBAA4A19CEBA} = {B5047B1F-FC9D-4615-A20A-46CF9BC71355}
 		{4C3F6E2A-28BB-40A5-9468-A9972D0597E1} = {B5047B1F-FC9D-4615-A20A-46CF9BC71355}
 		{C1E646A0-12DF-4A66-A9D0-0AF0F3AA2F4F} = {B5047B1F-FC9D-4615-A20A-46CF9BC71355}
+		{298915EE-5928-4009-A556-48AC0D2DC336} = {B5047B1F-FC9D-4615-A20A-46CF9BC71355}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1B2101B2-D15B-48AA-940E-CF1F390BB75A}

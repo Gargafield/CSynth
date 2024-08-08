@@ -1,15 +1,17 @@
 ﻿using System.Collections;
 using System.Text;
-using CSynth.AST;
 
-namespace CSynth.Analysis;
+namespace CSynth.AST;
 
 public class CFG : IEnumerable<Block> {
-    public BlockCollection Blocks { get; set; } = new();
-    public RegionCollection Regions { get; set; } = new();
+    public BlockCollection Blocks { get; set; }
+    public RegionCollection Regions { get; set; }
 
-    public CFG() { }
-
+    public CFG() {
+        Blocks = new BlockCollection();
+        Regions = new RegionCollection(Blocks);
+    }
+    
     public static CFG FromEquality(string text) {
         /*
         Input:
@@ -37,12 +39,12 @@ public class CFG : IEnumerable<Block> {
                 throw new ArgumentException("Id not sorted", nameof(text));
             
             if (targets.Count > 1) {
-                var block = BranchBlock.Create(cfg, "x");
+                var block = BranchBlock.Create(cfg.Blocks, "x");
                 blocks.Add(block, targets.ToList());
                 continue;
             }
             else {
-                var block = NoopBlock.Create(cfg);
+                var block = NoopBlock.Create(cfg.Blocks);
                 blocks.Add(block, targets.ToList());
             }
         }
@@ -77,7 +79,7 @@ public class CFG : IEnumerable<Block> {
             Console.WriteLine($"Block {block.Id}");
 
             foreach (var target in block.Successors) {
-                Console.WriteLine($"  -> {target.Id}");
+                Console.WriteLine($"  -> {target}");
             }
 
             if (block is BasicBlock basicBlock) {
@@ -103,14 +105,14 @@ public class CFG : IEnumerable<Block> {
                 BranchBlock branchBlock => $"Branch {branchBlock.Variable}",
                 _ => ""
             };
-            var regionId = Regions.LastOrDefault(r => r.Blocks.Contains(block))?.Id;
+            var regionId = ((List<Region>)Regions).LastOrDefault(r => r.Blocks.Contains(block.Id))?.Id;
             var group = regionId == null ? "" : $"{regionId}";
 
             
             builder.AppendLine($"  N{block.Id} [xlabel = {block.Id}, label = \"{label.Replace('"', '\'')}\", group = \"{group}\"];");
             
             foreach (var target in block.Successors) {
-                builder.AppendLine($"  N{block.Id} -> N{target.Id};");
+                builder.AppendLine($"  N{block.Id} -> N{target};");
             }
         }
 
@@ -124,7 +126,7 @@ public class CFG : IEnumerable<Block> {
         builder.AppendLine("graph TD");
         foreach (var block in Blocks) {
             foreach (var target in block.Successors) {
-                builder.AppendLine($"  {block.Id} --> {target.Id}");
+                builder.AppendLine($"  {block.Id} --> {target}");
             }
         }
         return builder.ToString();
@@ -132,9 +134,9 @@ public class CFG : IEnumerable<Block> {
 
     public string ToEquality() {
         var builder = new StringBuilder();
-        foreach (var block in Blocks.OrderBy(b => b.Id)) {
-            var targets = block.Successors.OrderBy(b => b.Id);
-            builder.AppendLine($"{block.Id}[{string.Join(',', targets.Select(t => (int)t.Id))}]");
+        foreach (var block in ((List<Block>)Blocks).OrderBy(b => b.Id)) {
+            var targets = block.Successors.Order();
+            builder.AppendLine($"{block.Id}[{string.Join(',', targets)}]");
         }
 
         return builder.ToString().TrimEnd();
@@ -143,5 +145,9 @@ public class CFG : IEnumerable<Block> {
     public void PrintMermaid()
     {
         Console.WriteLine(ToMermaid());
+    }
+
+    public override string ToString() {
+        return ToMermaid();
     }
 }

@@ -66,7 +66,7 @@ public class LuauWriter {
             ProcessStatement(statement);
         }
         indent--;
-        builder.AppendLine($"{IndentString}until not {doWhile.Condition}");
+        builder.AppendLine($"{IndentString}until {doWhile.Condition} == 0");
     }
 
     private void ProcessIf(IfStatement ifStatement) {

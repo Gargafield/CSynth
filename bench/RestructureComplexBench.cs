@@ -1,8 +1,7 @@
-using System;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
-using CSynth.Analysis;
-using CSynth.Analysis.Transformation;
+using CSynth.AST;
+using CSynth.Transformation;
 
 namespace CSynth.Bench;
 

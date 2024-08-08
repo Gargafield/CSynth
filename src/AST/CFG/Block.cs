@@ -1,31 +1,32 @@
-﻿using CSynth.AST;
+﻿using System.Runtime.CompilerServices;
+using CSynth.AST;
 
-namespace CSynth.Analysis;
+namespace CSynth.AST;
 
 public abstract class Block {
     public int Id { get; set; }
 
-    public List<Block> Predecessors { get; set; } = new();
-    public List<Block> Successors { get; set; } = new();
+    public HashSet<int> Predecessors { get; set; } = new();
+    public List<int> Successors { get; set; } = new();
 
     protected Block() { }
 
     public void AddTarget(Block target) {
-        Successors.Add(target);
-        target.Predecessors.Add(this);
+        Successors.Add(target.Id);
+        target.Predecessors.Add(this.Id);
     }
 
     public void RemoveTarget(Block target) {
-        Successors.Remove(target);
-        target.Predecessors.Remove(this);
+        Successors.Remove(target.Id);
+        target.Predecessors.Remove(this.Id);
     }
 
     public virtual void ReplaceTarget(Block oldTarget, Block newTarget) {
-        oldTarget.Predecessors.Remove(this);
-        newTarget.Predecessors.Add(this);
+        oldTarget.Predecessors.Remove(this.Id);
+        newTarget.Predecessors.Add(this.Id);
 
-        var index = Successors.IndexOf(oldTarget);
-        Successors[index] = newTarget;
+        var index = Successors.IndexOf(oldTarget.Id);
+        Successors[index] = newTarget.Id;
     }
 
     public override bool Equals(object? obj) {
@@ -35,8 +36,54 @@ public abstract class Block {
     public override int GetHashCode() => Id;
 }
 
-public class BlockCollection : List<Block> {
+public enum BranchVariable {
+    HeaderExit,
+    LoopControl,
+    BranchControl
+}
+
+public class BlockCollection : List<Block>, IEnumerable<int> {
+    public int First() => base[0].Id;
+
     public BlockCollection() { }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public List<int> Successors(int id) => this[id].Successors;
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public HashSet<int> Predecessors(int id) => this[id].Predecessors;
+
+    public IEnumerable<(int, int)> Branches(int id) {
+        if (this[id] is BranchBlock branchBlock) {
+            return branchBlock.Branches.Select(b => (b.Item1.Id, b.Item2));
+        }
+        return Enumerable.Empty<(int, int)>();
+    }
+
+    public int AddAssignment(BranchVariable variable, int value) {
+        var assignment = AssignmentBlock.Create(this);
+        assignment.AddVariable(variable.ToString(), value);
+        return assignment.Id;
+    }
+    public int AddBranch(BranchVariable variable) {
+        return BranchBlock.Create(this, variable.ToString()).Id;
+    }
+    public int AddNoop() {
+        return NoopBlock.Create(this).Id;
+    }
+
+    public void AddBranch(int from, int to, int value) {
+        var block = this[from] as BranchBlock;
+        block!.AddBranch(value, this[to]);
+    }
+    public void AddEdge(int from, int to) {
+        this[from].AddTarget(this[to]);
+    }
+    public void RemoveEdge(int from, int to) {
+        this[from].RemoveTarget(this[to]);
+    }
+    public void ReplaceEdge(int from, int oldTo, int newTo) {
+        this[from].ReplaceTarget(this[oldTo], this[newTo]);
+    }
 
     public T Add<T>(T block)
     where T: Block
@@ -45,6 +92,11 @@ public class BlockCollection : List<Block> {
         base.Add(block);
         return block;
     }
+
+    public IEnumerable<Block> GetEnumerable() => this;
+    public IEnumerable<int> GetEnumerableIds() => Enumerable.Range(0, Count);
+
+    IEnumerator<int> IEnumerable<int>.GetEnumerator() => Enumerable.Range(0, Count).GetEnumerator();
 }
 
 public class BasicBlock : Block {
@@ -91,8 +143,8 @@ public static class BlockVariable {
 public class AssignmentBlock : BasicBlock {
     protected AssignmentBlock() : base(new List<Statement>()) { }
 
-    public static AssignmentBlock Create(CFG cfg) {
-        return cfg.Blocks.Add(new AssignmentBlock());
+    public static AssignmentBlock Create(BlockCollection blocks) {
+        return blocks.Add(new AssignmentBlock());
     }
 
     public void AddVariable(string name, int value) {
@@ -112,8 +164,8 @@ public class BranchBlock : Block {
         this.Variable = Variable;
     }
 
-    public static BranchBlock Create(CFG cfg, string variable) {
-        return cfg.Blocks.Add(new BranchBlock(variable));
+    public static BranchBlock Create(BlockCollection blocks, string variable) {
+        return blocks.Add(new BranchBlock(variable));
     }
 
     public void AddBranch(int value, Block target) {
@@ -131,7 +183,7 @@ public class BranchBlock : Block {
 public class NoopBlock : SyntheticBlock {
     protected NoopBlock() { }
 
-    public static NoopBlock Create(CFG cfg) {
-        return cfg.Blocks.Add(new NoopBlock());
+    public static NoopBlock Create(BlockCollection blocks) {
+        return blocks.Add(new NoopBlock());
     }
 }

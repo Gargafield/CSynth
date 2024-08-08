@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using CSynth.Analysis;
-using CSynth.Analysis.Transformation;
+using CSynth.AST;
+using CSynth.Transformation;
 
 namespace CSynth.Test;
 
@@ -75,13 +76,17 @@ public class RestructureLoopTest
         6[]
         7[2,3]
         8[7]
-        9[15]
+        9[16]
         10[7]
-        11[15]
+        11[17]
         12[4,5]
-        13[15]
-        14[15]
+        13[18]
+        14[19]
         15[7,12]
+        16[15]
+        17[15]
+        18[15]
+        19[15]
         """;
 
         var cfg = CFG.FromEquality(graph);
@@ -89,6 +94,9 @@ public class RestructureLoopTest
         RestructureLoop.Restructure(cfg);
 
         var result = cfg.ToEquality();
+
+        var mermaidBefore = CFG.FromEquality(expected).ToMermaid();
+        var mermaidAfter = cfg.ToMermaid();
         
         Assert.Equal(expected, result);
     }

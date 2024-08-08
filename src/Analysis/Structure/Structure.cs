@@ -1,4 +1,6 @@
-﻿namespace CSynth.Analysis;
+﻿using CSynth.AST;
+
+namespace CSynth.Analysis;
 
 public abstract class Structure {
     public List<Structure> Children { get; set; } = new();

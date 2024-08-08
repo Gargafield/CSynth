@@ -1,20 +1,27 @@
 ﻿
-namespace CSynth.Analysis.Transformation;
+using CSynth.AST;
+
+namespace CSynth.Transformation;
 
 public class RestructureLoop
 {
     private CFG cfg;
-    private List<Block> loop = default!;
+    private BlockCollection blocks;
+    private RegionCollection regions;
+
+    private List<int> loop = default!;
 
     private RestructureLoop(CFG cfg) {
         this.cfg = cfg;
+        blocks = cfg.Blocks;
+        regions = cfg.Regions;
     }
 
-    public static void Restructure(CFG cfg) {
+    public static List<int> Restructure(CFG cfg) {
 
         var restructure = new RestructureLoop(cfg);
 
-        var sccs = SCC.ComputeSCC(cfg);
+        var sccs = SCC.ComputeSCC(cfg.Blocks);
 
         /*
               │ ╭───╮  
@@ -27,27 +34,31 @@ public class RestructureLoop
               │ │ 3 ├─╯
               │ ╰───╯
         */
-        var loops = sccs.Where(scc => scc.Count > 1 || scc.First().Successors.Contains(scc.First())).ToList();
+        var loops = sccs.Where(scc => scc.Count > 1 || cfg.Blocks.Successors(scc[0]).Contains(scc[0])).ToList();
+        var regions = new List<int>();
 
         foreach (var loop in loops) {
             restructure.loop = loop;
             var (header, control) = restructure.RestructureSingle();
-
-            var region = LoopRegion.Create(cfg, loop, header, control);
+            regions.Add(
+                restructure.regions.AddLoopRegion(loop, header, control)
+            );
         }
+
+        return regions;
     }
 
-    private Tuple<Block, Block> RestructureSingle() {
+    private Tuple<int, int> RestructureSingle() {
         var (entries, exits) = FindEntriesExits();
 
         var header = ConstructSingleHeader(entries);
 
         // All blocks that target the headers of the loop
-        var backEdgeBlocks = entries.Where(block => block.Predecessors.Intersect(loop).Any()).ToList();
+        var backEdgeBlocks = entries.Where(id => blocks.Predecessors(id).Intersect(loop).Any()).ToList();
 
         if (backEdgeBlocks.Count == 1
             && exits.Count == 1
-            && exits[0].Predecessors.Count == 1
+            && blocks.Predecessors(exits[0]).Count() == 1
             && backEdgeBlocks[0] == exits[0]) {
             /*
             We have our dream scenario:
@@ -72,25 +83,25 @@ public class RestructureLoop
     }
 
 
-    private Tuple<List<Block>, List<Block>> FindEntriesExits() {
+    private Tuple<List<int>, List<int>> FindEntriesExits() {
         // Entries are blocks that have predecessors outside the loop
         // Exits are blocks that have predecessors inside the loop
         
-        var entries = new List<Block>();
-        var exits = new List<Block>();
+        var entries = new List<int>();
+        var exits = new List<int>();
 
         foreach (var block in loop) {
-            if (block.Predecessors.Except(loop).Any()) {
+            if (blocks.Predecessors(block).Except(loop).Any()) {
                 entries.Add(block);
             }
 
-            exits.AddRange(block.Successors.Except(loop));
+            exits.AddRange(blocks.Successors(block).Except(loop));
         }
 
         return Tuple.Create(entries, exits.Distinct().ToList());
     }
 
-    private Block ConstructSingleHeader(List<Block> entries) {
+    private int ConstructSingleHeader(List<int> entries) {
         /*
          ╭───╮ ╭───╮     ╭───╮ ╭───╮ ╭───╮
          │ 0 │ │ 1 │     │ 0 │ │ 1 │ │ 2 ├╮
@@ -117,8 +128,8 @@ public class RestructureLoop
             return entries[0];
         }
 
-        var variable = BlockVariable.HeaderExit;
-        var header = BranchBlock.Create(cfg, variable);
+        var variable = BranchVariable.HeaderExit;
+        var header = blocks.AddBranch(variable);
         loop.Add(header);
 
         var counter = -1;
@@ -126,23 +137,23 @@ public class RestructureLoop
         foreach (var block in entries) {
             counter++;
 
-            foreach (var predecessors in block.Predecessors.ToArray()) {
-                var assignment = AssignmentBlock.Create(cfg);
-                assignment.AddTarget(header);
-                assignment.AddVariable(variable, counter);
+            foreach (var predecessors in blocks.Predecessors(block).ToArray()) {
+                
+                var assignment = blocks.AddAssignment(variable, counter);
+                blocks.AddEdge(assignment, header);
                 if (loop.Contains(predecessors))
                     loop.Add(assignment);
                 
-                predecessors.ReplaceTarget(block, assignment);
+                blocks.ReplaceEdge(predecessors, block, assignment);
             }
 
-            header.AddBranch(counter, block);
+            blocks.AddBranch(header, block, counter);
         }
 
         return header;
     }
 
-    private Block ConstructSingleExit(List<Block> exits) {
+    private int ConstructSingleExit(List<int> exits) {
         /*
           ╭───←──╮ ↓      ╭───←──╮ ↓
         ╭─┴─╮   ╭┴─┴╮   ╭─┴─╮   ╭┴─┴╮
@@ -170,29 +181,29 @@ public class RestructureLoop
             return exits[0];
         }
 
-        var exitVariable = BlockVariable.HeaderExit;
-        var exit = BranchBlock.Create(cfg, exitVariable);
+        var exitVariable = BranchVariable.HeaderExit;
+        var exit = blocks.AddBranch(exitVariable);
 
         var counter = -1;
 
         foreach (var block in exits) {
             counter++;
 
-            foreach (var predecessors in block.Predecessors.Intersect(loop).ToArray()) {
-                var assignment = AssignmentBlock.Create(cfg);
-                assignment.AddTarget(exit);
-                assignment.AddVariable(exitVariable, counter);
+            foreach (var predecessors in blocks.Predecessors(block).Intersect(loop).ToArray()) {
 
-                predecessors.ReplaceTarget(block, assignment);
+                var assignment = blocks.AddAssignment(exitVariable, counter);
+                blocks.AddEdge(assignment, exit);
+
+                blocks.ReplaceEdge(predecessors, block, assignment);
             }
 
-            exit.AddBranch(counter, block);
+            blocks.AddBranch(exit, block, counter);
         }
         
         return exit;
     }
 
-    private Block ConstructSingleControl(Block header, Block exit) {
+    private int ConstructSingleControl(int header, int exit) {
         /*
                ↓                 ↓
              ╭─┴─╮             ╭─┴─╮    
@@ -214,43 +225,29 @@ public class RestructureLoop
          and funnel control through a single BranchBlock (B), the new control.
         */
 
-        var repetitions = header.Predecessors.Intersect(loop).ToList();
+        var repetitions = blocks.Predecessors(header).Intersect(loop).ToList();
 
-        if (repetitions.Count == 1 && repetitions[0].Successors.Count == 2) {
+        if (repetitions.Count == 1 && blocks.Successors(repetitions[0]).Count() == 2) {
             return repetitions[0];
         }
 
-        var variable = BlockVariable.LoopControl;
-        var control = BranchBlock.Create(cfg, variable);
+        var variable = BranchVariable.LoopControl;
+        var control = blocks.AddBranch(variable);
 
-        foreach (var predecessors in repetitions) {
-            if (predecessors is AssignmentBlock assignment) {
-                assignment.ReplaceTarget(header, control);
-            }
-            else {
-                assignment = AssignmentBlock.Create(cfg);
-                assignment.AddTarget(control);
-                predecessors.ReplaceTarget(header, assignment);
-            }
-
-            assignment.AddVariable(variable, true);
+        foreach (var predecessor in repetitions) {
+            var assignment = blocks.AddAssignment(variable, 1);
+            blocks.AddEdge(assignment, control);
+            blocks.ReplaceEdge(predecessor, header, assignment);
         }
 
-        foreach (var predecessors in exit.Predecessors.ToArray()) {
-            if (predecessors is AssignmentBlock assignment) {
-                assignment.ReplaceTarget(exit, control);
-            }
-            else {
-                assignment = AssignmentBlock.Create(cfg);
-                assignment.AddTarget(control);
-                predecessors.ReplaceTarget(exit, assignment);
-            }
-
-            assignment.AddVariable(variable, false);
+        foreach (var predecessor in blocks.Predecessors(exit).ToArray()) {
+            var assignment = blocks.AddAssignment(variable, 0);
+            blocks.AddEdge(assignment, control);
+            blocks.ReplaceEdge(predecessor, exit, assignment);
         }
 
-        control.AddBranch(0, exit);
-        control.AddBranch(1, header);
+        blocks.AddBranch(control, header, 1);
+        blocks.AddBranch(control, exit, 0);
 
         return control;
     }

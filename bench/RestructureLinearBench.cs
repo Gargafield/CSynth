@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
-using CSynth.Analysis;
-using CSynth.Analysis.Transformation;
+using CSynth.AST;
+using CSynth.Transformation;
 
 namespace CSynth.Bench;
 
@@ -16,7 +16,7 @@ public class RestructureLinearBench
         cfg = new CFG();
         var blocks = new NoopBlock[N];
         for (int i = 0; i < N; i++)
-            blocks[i] = NoopBlock.Create(cfg);
+            blocks[i] = NoopBlock.Create(cfg.Blocks);
         
         for (int i = 0; i < N; i++) {
             if (i < N - 1)

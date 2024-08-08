@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AST\CSynth.AST.csproj" />
+    <ProjectReference Include="..\Transformation\CSynth.Transformation.csproj" />
   </ItemGroup>
 
 </Project>
