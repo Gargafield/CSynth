@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Mono.Cecil;
 
 namespace CSynth.AST;
 
@@ -6,6 +7,8 @@ public class LuauWriter {
     private List<Statement> statements;
 
     private HashSet<string> variables = new();
+    private Dictionary<string, string> imports = new();
+
     private StringBuilder builder = new();
     private int indent = 0;
     private string IndentString => new string(' ', indent * 4);
@@ -24,9 +27,13 @@ public class LuauWriter {
         foreach (var statement in statements) {
             ProcessStatement(statement);
         } 
-        
+
         var declaration = string.Join(", ", variables);
         builder.Insert(0, $"{IndentString}local {declaration}{Environment.NewLine}{Environment.NewLine}");
+
+        foreach (var (name, path) in imports) {
+            builder.Insert(0, $"local {name} = require(\"{path}\"){Environment.NewLine}");
+        }
         return builder.ToString();
     }
 
@@ -118,13 +125,23 @@ public class LuauWriter {
                 return number.Value.ToString();
             case StringExpression str:
                 return $"\"{str.Value}\"";
-            case CallExpression call:
+            case CallExpression call: {
                 // TODO: Fix method handle name
-                return $"{call.Method.Name}({string.Join(", ", call.Arguments.Select(ProcessExpression))})";
+                return $"{ImportMethod(call.Method)}({string.Join(", ", call.Arguments.Select(ProcessExpression))})";
+            }
             case BoolExpression boolean:
                 return boolean.Value ? "true" : "false";
             default:
                 throw new NotImplementedException();
         }
+    }
+
+    private string ImportMethod(MethodReference method) {
+        var type = method.DeclaringType;
+        if (!imports.ContainsKey(type.FullName)) {
+            imports[type.Name] = $"@{type.FullName.Replace(".", "/")}";
+        }
+
+        return $"{type.Name}.{method.Name}";
     }
 }
