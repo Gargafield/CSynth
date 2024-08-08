@@ -7,13 +7,13 @@ namespace CSynth.Test;
 public class ExamplesTest
 {
     private const string ExpectedExample1 = """
+    local Console = require("@System/Console")
     local loc0, condition, result, LoopControl
-
     loc0 = 0
     repeat
         condition = loc0 < 5
         if condition then
-            result = WriteLine("Hello, World!")
+            result = Console.WriteLine("Hello, World!")
             loc0 = loc0 + 1
             LoopControl = true
         else
@@ -25,13 +25,13 @@ public class ExamplesTest
     """;
 
     private const string ExpectedExample2 = """
+    local Console = require("@System/Console")
     local loc0, condition, result, LoopControl
-
     loc0 = 0
     repeat
         condition = loc0 < 5
         if condition then
-            result = WriteLine("Hello, World!")
+            result = Console.WriteLine("Hello, World!")
             condition = loc0 == 2
             if condition then
                 LoopControl = false
