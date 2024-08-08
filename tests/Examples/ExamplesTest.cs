@@ -8,16 +8,16 @@ public class ExamplesTest
 {
     private const string ExpectedExample1 = """
     local Console = require("@System/Console")
-    local loc0, condition, result, LoopControl
+    local loc0, condition, LoopControl, result
     loc0 = 0
     repeat
         condition = loc0 < 5
-        if condition then
+        if not condition then
+            LoopControl = 0
+        else
             result = Console.WriteLine("Hello, World!")
             loc0 = loc0 + 1
             LoopControl = 1
-        else
-            LoopControl = 0
         end
     until LoopControl == 0
     return result
@@ -26,21 +26,21 @@ public class ExamplesTest
 
     private const string ExpectedExample2 = """
     local Console = require("@System/Console")
-    local loc0, condition, result, LoopControl
+    local loc0, condition, LoopControl, result
     loc0 = 0
     repeat
         condition = loc0 < 5
-        if condition then
+        if not condition then
+            LoopControl = 0
+        else
             result = Console.WriteLine("Hello, World!")
             condition = loc0 == 2
-            if condition then
-                LoopControl = 0
-            else
+            if not condition then
                 loc0 = loc0 + 1
                 LoopControl = 1
+            else
+                LoopControl = 0
             end
-        else
-            LoopControl = 0
         end
     until LoopControl == 0
     return result

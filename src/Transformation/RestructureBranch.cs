@@ -102,11 +102,14 @@ public class RestructureBranch
         return control;
     }
 
+    private List<(int, int)> temp = new();
+
     private Tuple<List<Region>, HashSet<int>> ConstructBranchRegions(int branch) {
         var regions = new List<Region>();
         var continuations = new HashSet<int>();
         
-        foreach (var (successor, condition) in blocks.Branches(branch).ToArray()) {
+        var counter = 0;
+        foreach (var successor in blocks.Successors(branch).ToArray()) {
             HashSet<int> blocks;
             int head = successor;
 
@@ -149,9 +152,11 @@ public class RestructureBranch
             regions.Add(new Region {
                 Blocks = blocks,
                 Header = head,
-                Condition = condition
+                Condition = counter++
             });
         }
+
+        temp.Clear();
 
         return Tuple.Create(regions, continuations);
     }

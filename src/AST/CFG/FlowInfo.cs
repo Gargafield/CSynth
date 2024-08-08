@@ -105,9 +105,9 @@ public class FlowInfo
                 var mediator = BranchBlock.Create(CFG.Blocks, branch.Variable);
                 block.AddTarget(mediator);
 
-                var counter = 2;
-                foreach (var target in targets) {
-                    mediator.AddBranch(counter--, FindBlock(target));
+                var counter = 0;
+                foreach (var target in targets.AsEnumerable().Reverse()) {
+                    mediator.AddBranch(counter++, FindBlock(target));
                 }
             }
             else if (last is GotoStatement @goto) {

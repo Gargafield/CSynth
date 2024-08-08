@@ -246,8 +246,8 @@ public class RestructureLoop
             blocks.ReplaceEdge(predecessor, exit, assignment);
         }
 
-        blocks.AddBranch(control, header, 1);
         blocks.AddBranch(control, exit, 0);
+        blocks.AddBranch(control, header, 1);
 
         return control;
     }

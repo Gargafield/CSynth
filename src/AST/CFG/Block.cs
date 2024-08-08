@@ -52,13 +52,6 @@ public class BlockCollection : List<Block>, IEnumerable<int> {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public HashSet<int> Predecessors(int id) => this[id].Predecessors;
 
-    public IEnumerable<(int, int)> Branches(int id) {
-        if (this[id] is BranchBlock branchBlock) {
-            return branchBlock.Branches.Select(b => (b.Item1.Id, b.Item2));
-        }
-        return Enumerable.Empty<(int, int)>();
-    }
-
     public int AddAssignment(BranchVariable variable, int value) {
         var assignment = AssignmentBlock.Create(this);
         assignment.AddVariable(variable.ToString(), value);
@@ -157,7 +150,6 @@ public class AssignmentBlock : BasicBlock {
 }
 
 public class BranchBlock : Block {
-    public List<(Block, int)> Branches { get; set; } = new();
     public string Variable { get; set; }
 
     protected BranchBlock(string Variable) {
@@ -169,14 +161,8 @@ public class BranchBlock : Block {
     }
 
     public void AddBranch(int value, Block target) {
-        Branches.Add((target, value));
-        AddTarget(target);
-    }
-
-    public override void ReplaceTarget(Block oldTarget, Block newTarget) {
-        base.ReplaceTarget(oldTarget, newTarget);
-        var index = Branches.FindIndex(b => b.Item1 == oldTarget);
-        Branches[index] = (newTarget, Branches[index].Item2);
+        Successors.Insert(value, target.Id);
+        target.Predecessors.Add(this.Id);
     }
 }
 
