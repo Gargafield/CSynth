@@ -163,17 +163,15 @@ public class RestructureBranch
 
     private int? FindBranch(int head) {
         var succesesor = blocks.Successors(head);
-        var count = succesesor.Count();
-        while (count > 0) {
-            if (count > 1 && set.Contains(head)) {
+        while (succesesor.Count > 0) {
+            if (succesesor.Count > 1 && set.Contains(head)) {
                 return head;
             }
 
             set.Remove(head);
-            head = succesesor.First();
+            head = succesesor[0];
 
-            succesesor = blocks.Successors(head);
-            count = succesesor.Count();
+            succesesor = blocks[head].Successors;
         }
 
         return null;
