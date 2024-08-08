@@ -1,4 +1,5 @@
-﻿using CSynth.Analysis.Transformation;
+﻿using System.Diagnostics;
+using CSynth.Analysis.Transformation;
 using CSynth.AST;
 using Mono.Cecil.Cil;
 
@@ -9,6 +10,8 @@ public class Compiler
     private ControlTree tree;
     public Stack<List<Statement>> Scopes { get; } = new();
     public List<Statement> Statements => Scopes.Peek();
+    public HashSet<string> Locals { get; } = new();
+
     public Dictionary<string, Type> Variables { get; } = new() {
         { "HeaderExit", typeof(int) },
         { "LoopExit", typeof(bool) }
@@ -37,6 +40,8 @@ public class Compiler
 
     private void Compile() {
         CompileStructure(tree.Structure);
+
+        Statements.Insert(0, new DefineVariablesStatement(-1, Locals.ToList()));
     }
 
     private void CompileStructure(Structure structure) {
@@ -126,6 +131,9 @@ public class Compiler
         switch (block) {
             case BasicBlock basic:
                 Statements.AddRange(basic.Statements);
+                foreach (var statement in basic.Statements) {
+                    ProcessStatement(statement);
+                }
                 break;
             case BranchBlock: {
                 // Ignore?
@@ -137,6 +145,12 @@ public class Compiler
                 break;
             default:
                 throw new NotImplementedException();
+        }
+    }
+
+    private void ProcessStatement(Statement statement) {
+        if (statement is AssignmentStatement assignment) {
+            Locals.Add(assignment.Variable);
         }
     }
 

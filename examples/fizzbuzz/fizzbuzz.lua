@@ -1,6 +1,5 @@
 local Console = require("@System/Console")
 local loc0, condition, result, LoopControl
-
 loc0 = 1
 repeat
     condition = loc0 <= 100

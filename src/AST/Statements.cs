@@ -135,3 +135,15 @@ public class DoWhileStatement : Statement {
         return builder.ToString();
     }
 }
+
+public class DefineVariablesStatement : Statement {
+    public List<string> Variables { get; set; }
+
+    public DefineVariablesStatement(int offset, List<string> variables) : base(offset) {
+        Variables = variables;
+    }
+
+    public override string ToString() {
+        return $"local {string.Join(", ", Variables)}";
+    }
+}

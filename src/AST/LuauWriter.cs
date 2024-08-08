@@ -6,7 +6,6 @@ namespace CSynth.AST;
 public class LuauWriter {
     private List<Statement> statements;
 
-    private HashSet<string> variables = new();
     private Dictionary<string, string> imports = new();
 
     private StringBuilder builder = new();
@@ -26,10 +25,7 @@ public class LuauWriter {
     public string Write() {
         foreach (var statement in statements) {
             ProcessStatement(statement);
-        } 
-
-        var declaration = string.Join(", ", variables);
-        builder.Insert(0, $"{IndentString}local {declaration}{Environment.NewLine}{Environment.NewLine}");
+        }
 
         foreach (var (name, path) in imports) {
             builder.Insert(0, $"local {name} = require(\"{path}\"){Environment.NewLine}");
@@ -43,7 +39,7 @@ public class LuauWriter {
                 ProcessDoWhile(doWhile);
                 break;
             case AssignmentStatement assignment:
-                ProcessAssignment(assignment);
+                builder.AppendLine($"{IndentString}{assignment.Variable} = {ProcessExpression(assignment.Expression)}");
                 break;
             case IfStatement ifStatement:
                 ProcessIf(ifStatement);
@@ -51,6 +47,11 @@ public class LuauWriter {
             case ReturnStatement returnStatement: {
                 var expr = returnStatement.Expression == null ? "" : ProcessExpression(returnStatement.Expression);
                 builder.AppendLine($"{IndentString}return {expr}");
+                break;
+            }
+            case DefineVariablesStatement defineVariables: {
+                var declaration = string.Join(", ", defineVariables.Variables);
+                builder.AppendLine($"{IndentString}local {declaration}");
                 break;
             }
             default:
@@ -66,11 +67,6 @@ public class LuauWriter {
         }
         indent--;
         builder.AppendLine($"{IndentString}until not {doWhile.Condition}");
-    }
-
-    private void ProcessAssignment(AssignmentStatement assignment) {
-        variables.Add(assignment.Variable);
-        builder.AppendLine($"{IndentString}{assignment.Variable} = {ProcessExpression(assignment.Expression)}");
     }
 
     private void ProcessIf(IfStatement ifStatement) {
@@ -115,7 +111,6 @@ public class LuauWriter {
     private string ProcessExpression(Expression expression) {
         switch (expression) {
             case VariableExpression variable:
-                variables.Add(variable.Name);
                 return variable.Name;
             case BinaryExpression binary:
                 return $"{ProcessExpression(binary.Left)} {OperatorMap[binary.Operator]} {ProcessExpression(binary.Right)}";
