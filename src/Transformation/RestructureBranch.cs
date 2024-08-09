@@ -1,4 +1,5 @@
 ﻿
+using System.Buffers;
 using CSynth.AST;
 
 namespace CSynth.Transformation;
@@ -50,7 +51,8 @@ public class RestructureBranch
     }
 
     private void RestructureSingle() {
-        var (regions, continuations) = ConstructBranchRegions(branch);
+        var (regionsArray, numRegions, continuations) = ConstructBranchRegions(branch);
+        var regions = regionsArray.AsSpan(0, numRegions);
 
         int exit;
         if (continuations.Count > 1)
@@ -62,9 +64,10 @@ public class RestructureBranch
         foreach (var region in regions) {
             this.regions.AddRegionToBranch(branchRegion, region.Blocks, region.Header, region.Condition);
         }
+        ArrayPool<Region>.Shared.Return(regionsArray);
     }
 
-    private int ConstructSingleExit(List<Region> regions, List<int> continuations) {
+    private int ConstructSingleExit(Span<Region> regions, List<int> continuations) {
         if (continuations.Count <= 1) {
             return continuations.FirstOrDefault()!;
         }
@@ -73,7 +76,7 @@ public class RestructureBranch
         var control = blocks.AddBranch(variable);
         
         for (int i = 0; i < continuations.Count; i++) {
-            blocks.AddBranch(control, continuations[i], i);
+            blocks.AddEdge(control, continuations[i]);
         }
 
         foreach (var region in regions) {
@@ -102,18 +105,17 @@ public class RestructureBranch
         return control;
     }
 
-    private List<(int, int)> temp = new();
-
-    private Tuple<List<Region>, HashSet<int>> ConstructBranchRegions(int branch) {
-        var regions = new List<Region>();
+    private Tuple<Region[], int, HashSet<int>> ConstructBranchRegions(int branch) {
+        var succesesor = blocks.Successors(branch);
+        var regions = ArrayPool<Region>.Shared.Rent(succesesor.Count);
         var continuations = new HashSet<int>();
         
-        var counter = 0;
-        foreach (var successor in blocks.Successors(branch).ToArray()) {
+        for (int i = 0; i < succesesor.Count; i++) {
+            var successor = succesesor[i];
             HashSet<int> blocks;
             int head = successor;
 
-            if (this.blocks.Predecessors(successor).Count() > 1) {
+            if (this.blocks.Predecessors(successor).Count > 1) {
                 // Empty branch region, construct noop
                 var noop = this.blocks.AddNoop();
                 this.blocks.AddEdge(noop, successor);
@@ -135,7 +137,8 @@ public class RestructureBranch
 
                     blocks.Add(block);
                     foreach (var succ in this.blocks.Successors(block)) {
-                        if (!blocks.Contains(succ) && this.blocks.Predecessors(succ).All(blocks.Contains))
+                        var predessors = this.blocks.Predecessors(succ);
+                        if (!blocks.Contains(succ) && (predessors.Count == 1 || predessors.All(blocks.Contains)))
                             stack.Enqueue(succ);
                     }
                 }
@@ -149,16 +152,14 @@ public class RestructureBranch
                 }
             }
 
-            regions.Add(new Region {
+            regions[i] = new Region {
                 Blocks = blocks,
                 Header = head,
-                Condition = counter++
-            });
+                Condition = i
+            };
         }
 
-        temp.Clear();
-
-        return Tuple.Create(regions, continuations);
+        return Tuple.Create(regions, succesesor.Count, continuations);
     }
 
     private int? FindBranch(int head) {
@@ -171,7 +172,7 @@ public class RestructureBranch
             set.Remove(head);
             head = succesesor[0];
 
-            succesesor = blocks[head].Successors;
+            succesesor = blocks.Successors(head);
         }
 
         return null;

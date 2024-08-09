@@ -39,7 +39,7 @@ public class RestructureComplexBench
         cfg = CFG.FromEquality(graph);
         RestructureLoop.Restructure(cfg);
         foreach (var loop in cfg.Regions.OfType<LoopRegion>())
-            loop.RemoveBackedge();
+            cfg.Regions.RemoveBackedge(loop.Id);
         
         graph = cfg.ToEquality();
     }

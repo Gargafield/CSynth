@@ -50,14 +50,13 @@ public class CFG : IEnumerable<Block> {
         }
 
         foreach (var (block, targetIds) in blocks) {
-            counter = 0;
             foreach (var targetId in targetIds) {
                 var target = cfg.Blocks[targetId];
                 if (block is BranchBlock branchBlock) {
-                    branchBlock.AddBranch(counter++, target);
+                    cfg.Blocks.AddEdge(branchBlock.Id, target.Id);
                 }
                 else {
-                    block.AddTarget(target);
+                    cfg.Blocks.AddEdge(block.Id, target.Id);
                 }
             }
         }
@@ -66,7 +65,7 @@ public class CFG : IEnumerable<Block> {
     }
 
     public IEnumerator<Block> GetEnumerator() {
-        return Blocks.GetEnumerator();
+        return Blocks.Blocks.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator() {
@@ -75,13 +74,14 @@ public class CFG : IEnumerable<Block> {
 
     public void Print()
     {
-        foreach (var block in Blocks) {
-            Console.WriteLine($"Block {block.Id}");
+        foreach (var blockId in Blocks.GetEnumerableIds()) {
+            Console.WriteLine($"Block {blockId}");
 
-            foreach (var target in block.Successors) {
+            foreach (var target in Blocks.Successors(blockId)) {
                 Console.WriteLine($"  -> {target}");
             }
 
+            var block = Blocks[blockId];
             if (block is BasicBlock basicBlock) {
                 foreach (var instruction in basicBlock.Statements) {
                     Console.WriteLine(instruction);
@@ -99,7 +99,9 @@ public class CFG : IEnumerable<Block> {
         builder.AppendLine("digraph G {");
         builder.AppendLine("  node [shape = box, style = filled, ordering = out];");
 
-        foreach (var block in Blocks) {
+        foreach (var blockId in Blocks.GetEnumerableIds()) {
+            var block = Blocks[blockId];
+
             var label = block switch {
                 BasicBlock basicBlock => string.Join(Environment.NewLine, basicBlock.Statements),
                 BranchBlock branchBlock => $"Branch {branchBlock.Variable}",
@@ -111,7 +113,7 @@ public class CFG : IEnumerable<Block> {
             
             builder.AppendLine($"  N{block.Id} [xlabel = {block.Id}, label = \"{label.Replace('"', '\'')}\", group = \"{group}\"];");
             
-            foreach (var target in block.Successors) {
+            foreach (var target in Blocks.Successors(blockId)) {
                 builder.AppendLine($"  N{block.Id} -> N{target};");
             }
         }
@@ -124,9 +126,9 @@ public class CFG : IEnumerable<Block> {
     public string ToMermaid() {
         var builder = new StringBuilder();
         builder.AppendLine("graph TD");
-        foreach (var block in Blocks) {
-            foreach (var target in block.Successors) {
-                builder.AppendLine($"  {block.Id} --> {target}");
+        foreach (var blockId in Blocks.GetEnumerableIds()) {
+            foreach (var target in Blocks.Successors(blockId)) {
+                builder.AppendLine($"  {blockId} --> {target}");
             }
         }
         return builder.ToString();
@@ -134,9 +136,9 @@ public class CFG : IEnumerable<Block> {
 
     public string ToEquality() {
         var builder = new StringBuilder();
-        foreach (var block in ((List<Block>)Blocks).OrderBy(b => b.Id)) {
-            var targets = block.Successors.Order();
-            builder.AppendLine($"{block.Id}[{string.Join(',', targets)}]");
+        foreach (var block in Blocks.GetEnumerableIds()) {
+            var targets = Blocks.Successors(block).Order();
+            builder.AppendLine($"{block}[{string.Join(',', targets)}]");
         }
 
         return builder.ToString().TrimEnd();

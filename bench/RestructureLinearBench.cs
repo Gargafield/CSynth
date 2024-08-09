@@ -20,7 +20,7 @@ public class RestructureLinearBench
         
         for (int i = 0; i < N; i++) {
             if (i < N - 1)
-                blocks[i].AddTarget(blocks[i + 1]);
+                cfg.Blocks.AddEdge(i, i + 1);
         }
     }
 

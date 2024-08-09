@@ -82,7 +82,7 @@ public class FlowInfo
             offsetMap[start] = block;
         }
 
-        entry.AddTarget(Blocks[0]);
+        CFG.Blocks.AddEdge(entry.Id, Blocks[0].Id);
         var exit = ExitBlock.Create(CFG);
 
         // Connect blocks
@@ -92,7 +92,7 @@ public class FlowInfo
             
             var index = statements.IndexOf(last);
             if (!this.targets.ContainsKey(index)) {
-                block.AddTarget(Blocks[i + 1]);
+                CFG.Blocks.AddEdge(block.Id, Blocks[i + 1].Id);
                 continue;
             }
             
@@ -102,24 +102,23 @@ public class FlowInfo
                 block.Statements.RemoveAt(block.Statements.Count - 1);
 
                 var mediator = BranchBlock.Create(CFG.Blocks, branch.Variable);
-                block.AddTarget(mediator);
+                CFG.Blocks.AddEdge(block.Id, mediator.Id);
 
-                var counter = 0;
                 foreach (var target in targets.AsEnumerable().Reverse()) {
-                    mediator.AddBranch(counter++, FindBlock(target));
+                    CFG.Blocks.AddEdge(mediator.Id, FindBlock(target).Id);
                 }
             }
             else if (last is GotoStatement @goto) {
                 block.Statements.RemoveAt(block.Statements.Count - 1);
 
-                block.AddTarget(offsetMap[statements.IndexOf(@goto.Target)]);
+                CFG.Blocks.AddEdge(block.Id, offsetMap[statements.IndexOf(@goto.Target)].Id);
             }
             else if (last is ReturnStatement @return) {
-                block.AddTarget(exit);
+                CFG.Blocks.AddEdge(block.Id, exit.Id);
             }
             else {
                 foreach (var target in targets) {
-                    block.AddTarget(FindBlock(target));
+                    CFG.Blocks.AddEdge(block.Id, FindBlock(target).Id);
                 }
             }
         }

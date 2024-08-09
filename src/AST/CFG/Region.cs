@@ -32,11 +32,13 @@ public class RegionCollection : List<Region>, IEnumerable<int> {
     }
 
     public void RemoveBackedge(int loop) {
-        ((LoopRegion)this[loop]).RemoveBackedge();
+        var region = (LoopRegion)this[loop];
+        Blocks.RemoveEdge(region.Control.Id, region.Header.Id);
     }
 
     public void AddBackedge(int loop) {
-        ((LoopRegion)this[loop]).AddBackedge();
+        var region = (LoopRegion)this[loop];
+        Blocks.AddEdge(region.Control.Id, region.Header.Id);
     }
 
     public T Add<T>(T region)
@@ -62,14 +64,6 @@ public class LoopRegion : Region {
 
     public static LoopRegion Create(RegionCollection regions, ICollection<int> blocks, Block header, Block control) {
         return regions.Add(new LoopRegion(blocks, header, control));
-    }
-
-    public void RemoveBackedge() {
-        Control.RemoveTarget(Header);
-    }
-
-    public void AddBackedge() {
-        Control.AddTarget(Header);
     }
 }
 
@@ -112,9 +106,5 @@ public class BranchRegion : Region {
         foreach (var block in region) {
             Blocks.Add(block);
         }
-    }
-
-    public void RemoveExit() {
-        Header.RemoveTarget(Exit);
     }
 }

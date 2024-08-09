@@ -147,7 +147,7 @@ public class RestructureLoop
                 blocks.ReplaceEdge(predecessors, block, assignment);
             }
 
-            blocks.AddBranch(header, block, counter);
+            blocks.AddEdge(header, block);
         }
 
         return header;
@@ -187,7 +187,6 @@ public class RestructureLoop
         var counter = -1;
 
         foreach (var block in exits) {
-            counter++;
 
             foreach (var predecessors in blocks.Predecessors(block).Intersect(loop).ToArray()) {
 
@@ -197,7 +196,7 @@ public class RestructureLoop
                 blocks.ReplaceEdge(predecessors, block, assignment);
             }
 
-            blocks.AddBranch(exit, block, counter);
+            blocks.AddEdge(exit, block);
         }
         
         return exit;
@@ -246,8 +245,8 @@ public class RestructureLoop
             blocks.ReplaceEdge(predecessor, exit, assignment);
         }
 
-        blocks.AddBranch(control, exit, 0);
-        blocks.AddBranch(control, header, 1);
+        blocks.AddEdge(control, exit);
+        blocks.AddEdge(control, header);
 
         return control;
     }

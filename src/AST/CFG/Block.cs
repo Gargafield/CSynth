@@ -6,28 +6,7 @@ namespace CSynth.AST;
 public abstract class Block {
     public int Id { get; set; }
 
-    public HashSet<int> Predecessors { get; set; } = new();
-    public List<int> Successors { get; set; } = new();
-
     protected Block() { }
-
-    public void AddTarget(Block target) {
-        Successors.Add(target.Id);
-        target.Predecessors.Add(this.Id);
-    }
-
-    public void RemoveTarget(Block target) {
-        Successors.Remove(target.Id);
-        target.Predecessors.Remove(this.Id);
-    }
-
-    public virtual void ReplaceTarget(Block oldTarget, Block newTarget) {
-        oldTarget.Predecessors.Remove(this.Id);
-        newTarget.Predecessors.Add(this.Id);
-
-        var index = Successors.IndexOf(oldTarget.Id);
-        Successors[index] = newTarget.Id;
-    }
 
     public override bool Equals(object? obj) {
         return obj is Block block && block.Id == Id;
@@ -42,15 +21,21 @@ public enum BranchVariable {
     BranchControl
 }
 
-public class BlockCollection : List<Block>, IEnumerable<int> {
-    public int First() => base[0].Id;
+public class BlockCollection {
+    public List<Block> Blocks { get; } = new();
+    public List<List<int>> _successors { get; } = new();
+    public List<HashSet<int>> _predecessors { get; } = new();
+
+    public Block this[int id] => Blocks[id];
+
+    public int First() => Blocks[0].Id;
 
     public BlockCollection() { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public List<int> Successors(int id) => this[id].Successors;
+    public List<int> Successors(int id) => _successors[id];
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public HashSet<int> Predecessors(int id) => this[id].Predecessors;
+    public HashSet<int> Predecessors(int id) => _predecessors[id];
 
     public int AddAssignment(BranchVariable variable, int value) {
         var assignment = AssignmentBlock.Create(this);
@@ -63,33 +48,34 @@ public class BlockCollection : List<Block>, IEnumerable<int> {
     public int AddNoop() {
         return NoopBlock.Create(this).Id;
     }
-
-    public void AddBranch(int from, int to, int value) {
-        var block = this[from] as BranchBlock;
-        block!.AddBranch(value, this[to]);
-    }
     public void AddEdge(int from, int to) {
-        this[from].AddTarget(this[to]);
+        _successors[from].Add(to);
+        _predecessors[to].Add(from);
     }
     public void RemoveEdge(int from, int to) {
-        this[from].RemoveTarget(this[to]);
+        _successors[from].Remove(to);
+        _predecessors[to].Remove(from);
     }
     public void ReplaceEdge(int from, int oldTo, int newTo) {
-        this[from].ReplaceTarget(this[oldTo], this[newTo]);
+        var successors = _successors[from];
+        var index = successors.IndexOf(oldTo);
+        successors[index] = newTo;
+
+        _predecessors[oldTo].Remove(from);
+        _predecessors[newTo].Add(from);
     }
 
     public T Add<T>(T block)
     where T: Block
     {
-        block.Id = Count;
-        base.Add(block);
+        block.Id = Blocks.Count;
+        Blocks.Add(block);
+        _successors.Add(new List<int>());
+        _predecessors.Add(new HashSet<int>());
         return block;
     }
 
-    public IEnumerable<Block> GetEnumerable() => this;
-    public IEnumerable<int> GetEnumerableIds() => Enumerable.Range(0, Count);
-
-    IEnumerator<int> IEnumerable<int>.GetEnumerator() => Enumerable.Range(0, Count).GetEnumerator();
+    public IEnumerable<int> GetEnumerableIds() => Enumerable.Range(0, Blocks.Count);
 }
 
 public class BasicBlock : Block {
@@ -157,11 +143,6 @@ public class BranchBlock : Block {
 
     public static BranchBlock Create(BlockCollection blocks, string variable) {
         return blocks.Add(new BranchBlock(variable));
-    }
-
-    public void AddBranch(int value, Block target) {
-        Successors.Insert(value, target.Id);
-        target.Predecessors.Add(this.Id);
     }
 }
 

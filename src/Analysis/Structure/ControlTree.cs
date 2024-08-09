@@ -63,7 +63,7 @@ public class ControlTree {
             else {
                 Structure.Children.Add(new BlockStructure(current));
 
-                foreach (var succ in current.Successors) {
+                foreach (var succ in cfg.Blocks.Successors(current.Id)) {
                     if (blocks.Contains(succ) && !visited.Contains(succ)) {
                         stack.Push(succ);
                     }
