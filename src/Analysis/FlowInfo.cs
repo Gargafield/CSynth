@@ -1,6 +1,6 @@
 ﻿using CSynth.AST;
 
-namespace CSynth.AST;
+namespace CSynth.Analysis;
 
 public class FlowInfo
 {
@@ -13,7 +13,7 @@ public class FlowInfo
 
     internal FlowInfo() { }
 
-    public static FlowInfo From(ICollection<Statement> statements)
+    public static FlowInfo From(IList<Statement> statements)
     {
         var flowInfo = new FlowInfo();
         flowInfo.Build(statements);
@@ -31,35 +31,31 @@ public class FlowInfo
             blockOffsets.Add(target);
     }
 
-    private void Build(ICollection<Statement> statements) {
+    private void Build(IList<Statement> statements) {
         blockOffsets.Add(0);
 
         for (int i = 0; i < statements.Count; i++) {
             var statement = statements.ElementAt(i);
 
             if (statement is BranchStatement branch) {
-                AddTarget(branch.Offset, branch.Target);
-
-                var next = statements.ElementAt(i + 1);
-                AddTarget(branch.Offset, next.Offset);
+                AddTarget(i, statements.IndexOf(branch.Target));
+                AddTarget(i, i + 1);
             }
             else if (statement is GotoStatement @goto) {
-                AddTarget(@goto.Offset, @goto.Target);
-
-                var next = statements.ElementAt(i + 1);
-                blockOffsets.Add(next.Offset);
+                AddTarget(i, statements.IndexOf(@goto.Target));
+                blockOffsets.Add(i + 1);
             }
             else if (statement is ReturnStatement @return) {
-                AddTarget(@return.Offset, -1);
+                AddTarget(i, -1);
             }
         }
 
         var last = statements.Last();
-        returnOffset = last.Offset + 1;
+        returnOffset = statements.Count + 1;
         blockOffsets.Add(returnOffset);
     }
 
-    private void BuildCFG(ICollection<Statement> statements) {
+    private void BuildCFG(IList<Statement> statements) {
         
         // Collect block offsets into pairs start, end
         var orderedOffsets = blockOffsets.OrderBy(x => x)
@@ -76,7 +72,7 @@ public class FlowInfo
 
         // Create blocks
         foreach (var (start, end) in offsets) {
-            var blockStatements = statements.Where(x => x.Offset >= start && x.Offset < end).ToList();
+            var blockStatements = statements.Skip(start).Take(end - start).ToList();
 
             if (blockStatements.Count == 0)
                 continue;
@@ -84,20 +80,23 @@ public class FlowInfo
             var block = BasicBlock.Create(CFG, blockStatements);
             Blocks.Add(block);
             offsetMap[start] = block;
-
-            if (!targets.ContainsKey(blockStatements.Last().Offset)) {
-                // Add target to next block
-                AddTarget(blockStatements.Last().Offset, end);
-            }
         }
 
         entry.AddTarget(Blocks[0]);
         var exit = ExitBlock.Create(CFG);
 
         // Connect blocks
-        foreach (var block in Blocks) {
+        for (int i = 0; i < Blocks.Count; i++) {
+            var block = Blocks[i];
             var last = block.Statements.Last();
-            var targets = this.targets[last.Offset];
+            
+            var index = statements.IndexOf(last);
+            if (!this.targets.ContainsKey(index)) {
+                block.AddTarget(Blocks[i + 1]);
+                continue;
+            }
+            
+            var targets = this.targets[statements.IndexOf(last)];
 
             if (last is BranchStatement branch) {
                 block.Statements.RemoveAt(block.Statements.Count - 1);
@@ -113,7 +112,7 @@ public class FlowInfo
             else if (last is GotoStatement @goto) {
                 block.Statements.RemoveAt(block.Statements.Count - 1);
 
-                block.AddTarget(offsetMap[@goto.Target]);
+                block.AddTarget(offsetMap[statements.IndexOf(@goto.Target)]);
             }
             else if (last is ReturnStatement @return) {
                 block.AddTarget(exit);

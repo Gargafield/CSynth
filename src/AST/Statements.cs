@@ -1,22 +1,15 @@
 ﻿using System.Text;
+using Mono.Cecil;
 
 namespace CSynth.AST;
 
-public abstract class Statement {
-    public int Offset { get; set; }
-
-    private Statement() { }
-
-    public Statement(int offset) {
-        Offset = offset;
-    }
-}
+public abstract class Statement { }
 
 public class AssignmentStatement : Statement {
     public string Variable { get; set; }
     public Expression Expression { get; set; }
 
-    public AssignmentStatement(int offset, string variable, Expression expression) : base(offset) {
+    public AssignmentStatement(string variable, Expression expression) {
         Variable = variable;
         Expression = expression;
     }
@@ -29,7 +22,7 @@ public class AssignmentStatement : Statement {
 public class IfStatement : Statement {
     public List<Tuple<Expression?, List<Statement>>> Conditions { get; set; } = new();
 
-    public IfStatement(int offset, List<Tuple<Expression?, List<Statement>>> conditions) : base(offset) {
+    public IfStatement(List<Tuple<Expression?, List<Statement>>> conditions) {
         Conditions = conditions;
     }
 
@@ -56,7 +49,7 @@ public class LoopStatement : Statement {
     public List<Statement> Body { get; set; }
     public Expression Condition { get; set; }
 
-    public LoopStatement(int offset, List<Statement> body, Expression condition) : base(offset) {
+    public LoopStatement(List<Statement> body, Expression condition) {
         Body = body;
         Condition = condition;
     }
@@ -77,9 +70,9 @@ public class LoopStatement : Statement {
 
 
 public class GotoStatement : Statement {
-    public int Target { get; set; }
+    public Statement Target { get; set; }
 
-    public GotoStatement(int offset, int target) : base(offset) {
+    public GotoStatement(Statement target) {
         Target = target;
     }
 
@@ -91,7 +84,7 @@ public class GotoStatement : Statement {
 public class BranchStatement : GotoStatement {
     public string Variable { get; set; }
 
-    public BranchStatement(int offset, string variable, int target) : base(offset, target) {
+    public BranchStatement(string variable, Statement target) : base(target) {
         Variable = variable;
         Target = target;
     }
@@ -104,7 +97,7 @@ public class BranchStatement : GotoStatement {
 public class ReturnStatement : Statement {
     public Expression? Expression { get; set; }
 
-    public ReturnStatement(int offset, Expression? expression) : base(offset) {
+    public ReturnStatement(Expression? expression) {
         Expression = expression;
     }
 
@@ -117,7 +110,7 @@ public class DoWhileStatement : Statement {
     public List<Statement> Body { get; set; }
     public Expression Condition { get; set; }
 
-    public DoWhileStatement(int offset, List<Statement> body, Expression condition) : base(offset) {
+    public DoWhileStatement(List<Statement> body, Expression condition) {
         Body = body;
         Condition = condition;
     }
@@ -139,11 +132,34 @@ public class DoWhileStatement : Statement {
 public class DefineVariablesStatement : Statement {
     public List<string> Variables { get; set; }
 
-    public DefineVariablesStatement(int offset, List<string> variables) : base(offset) {
+    public DefineVariablesStatement(List<string> variables) {
         Variables = variables;
     }
 
     public override string ToString() {
         return $"local {string.Join(", ", Variables)}";
+    }
+}
+
+public class MethodDefinitionStatement : Statement {
+    public MethodDefinition Method { get; set; }
+    public List<Statement> Body { get; set; }
+
+    public MethodDefinitionStatement(MethodDefinition method, List<Statement> body) {
+        Method = method;
+        Body = body;
+    }
+
+    public override string ToString() {
+        var builder = new StringBuilder();
+        builder.Append($"function {Method.Name}(");
+        builder.Append(string.Join(", ", Method.Parameters.Select(p => p.Name)));
+        builder.Append(")\n");
+        foreach (var statement in Body) {
+            builder.Append(statement);
+            builder.Append("\n");
+        }
+        builder.Append("end\n");
+        return builder.ToString();
     }
 }

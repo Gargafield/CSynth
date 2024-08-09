@@ -41,7 +41,7 @@ public class Compiler
     private void Compile() {
         CompileStructure(tree.Structure);
 
-        Statements.Insert(0, new DefineVariablesStatement(-1, Locals.ToList()));
+        Statements.Insert(0, new DefineVariablesStatement(Locals.ToList()));
     }
 
     private void CompileStructure(Structure structure) {
@@ -72,7 +72,6 @@ public class Compiler
         var branch = block!.Block as BranchBlock;
 
         Statements.Add(new DoWhileStatement(
-            -1,
             body,
             new VariableExpression(branch!.Variable)
         ));
@@ -118,7 +117,7 @@ public class Compiler
             first = false;
         }
 
-        Statements.Add(new IfStatement(-1, conditions));
+        Statements.Add(new IfStatement(conditions));
     }
 
     private void CompileLinear(LinearStructure structure) {

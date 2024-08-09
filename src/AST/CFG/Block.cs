@@ -94,7 +94,6 @@ public class BlockCollection : List<Block>, IEnumerable<int> {
 
 public class BasicBlock : Block {
     public List<Statement> Statements { get; set; } = new();
-    public int Offset => Statements.FirstOrDefault()?.Offset ?? -1;
 
     protected BasicBlock(List<Statement> statement) {
         Statements = statement;
@@ -141,11 +140,11 @@ public class AssignmentBlock : BasicBlock {
     }
 
     public void AddVariable(string name, int value) {
-        Statements.Add(new AssignmentStatement(-1, name, new NumberExpression(value)));
+        Statements.Add(new AssignmentStatement(name, new NumberExpression(value)));
     }
 
     public void AddVariable(string name, bool value) {
-        Statements.Add(new AssignmentStatement(-1, name, value ? BoolExpression.True : BoolExpression.False));
+        Statements.Add(new AssignmentStatement(name, value ? BoolExpression.True : BoolExpression.False));
     }
 }
 

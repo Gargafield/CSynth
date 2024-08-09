@@ -4,8 +4,11 @@ using Mono.Cecil.Cil;
 namespace CSynth.AST;
 
 public class ILTranslator {
-    private List<Statement> _statements = new();
+    public List<Statement> Statements = new();
+    public List<(int, GotoStatement)> targets = new();
+    public List<(Range, Statement)> offsets = new();
     private Stack<Expression> _expressions = new();
+    private int _lastOffset = -1;
 
     
     public static List<Statement> Translate(IEnumerable<Instruction> instructions) {
@@ -15,7 +18,7 @@ public class ILTranslator {
             translator.TranslateInstruction(instruction);
         }
 
-        return translator._statements;
+        return translator.Statements;
     }
 
     private Dictionary<string, Operator> OperatorMap = new() {
@@ -38,7 +41,45 @@ public class ILTranslator {
         { "bge.s", Operator.GreaterThanOrEqual },
     };
 
+    private void AddStatement(int offset, Statement statement) {
+        Statements.Add(statement);
+        offsets.Add((new Range(_lastOffset + 1, offset), statement));
+        _lastOffset = offset;
+
+        // Look in targets if there is a target less than the current instruction
+        foreach (var (target, gotoStatement) in targets.Where(t => t.Item1 <= offset).ToList()) {
+            gotoStatement.Target = statement;
+            targets.Remove((target, gotoStatement));
+        }
+    }
+
+    private bool TryGetTarget(int offset, out Statement statement) {
+        foreach (var (range, target) in offsets) {
+            if (offset >= range.Start.Value && offset <= range.End.Value) {
+                statement = target;
+                return true;
+            }
+        }
+
+        statement = null!;
+        return false;
+    }
+
+    private bool FixBranchTarget(GotoStatement statement, Instruction instruction) {
+        var target = (Instruction)instruction.Operand;
+        if (TryGetTarget(target.Offset, out var targetStatement)) {
+            statement.Target = targetStatement;
+            return true;
+        }
+        else {
+            targets.Add((target.Offset, statement));
+        }
+
+        return false;
+    }
+
     private void TranslateInstruction(Instruction instruction) {
+        
         switch (instruction.OpCode.Code) {
             case Code.Nop:
                 break;
@@ -64,15 +105,13 @@ public class ILTranslator {
             case Code.Stloc_1:
             case Code.Stloc_2:
             case Code.Stloc_3:
-                _statements.Add(new AssignmentStatement(
-                    instruction.Offset,
+                AddStatement(instruction.Offset, new AssignmentStatement(
                     $"loc{(int)instruction.OpCode.Code - (int)Code.Stloc_0}",
                     _expressions.Pop()
                 ));
                 break;
             case Code.Stloc_S:
-                _statements.Add(new AssignmentStatement(
-                    instruction.Offset,
+                AddStatement(instruction.Offset, new AssignmentStatement(
                     $"loc{(byte)instruction.Operand}",
                     _expressions.Pop()
                 ));
@@ -114,15 +153,18 @@ public class ILTranslator {
                     args.Add(_expressions.Pop());
                 }
                 args.Reverse();
-                _statements.Add(new AssignmentStatement(
-                    instruction.Offset,
-                    "result", new CallExpression(method, args)));
+                AddStatement(instruction.Offset, new AssignmentStatement(
+                    "result",
+                    new CallExpression(method, args)
+                ));
                 _expressions.Push(new VariableExpression("result"));
                 break;
             }
             case Code.Br_S: {
                 var target = (Instruction)instruction.Operand;
-                _statements.Add(new GotoStatement(instruction.Offset, target.Offset));
+                var statement = new GotoStatement(null!);
+                FixBranchTarget(statement, instruction);
+                AddStatement(instruction.Offset, statement);
                 break;
             }
             case Code.Beq_S:
@@ -133,15 +175,22 @@ public class ILTranslator {
                 var target = (Instruction)instruction.Operand;
                 var right = _expressions.Pop();
                 var left = _expressions.Pop();
-                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name])));
-                _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
+                AddStatement(instruction.Offset - 1, new AssignmentStatement(
+                    "condition",
+                    new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name])
+                ));
+
+                var statement = new BranchStatement("condition", null!);
+                FixBranchTarget(statement, instruction);
+                AddStatement(instruction.Offset, statement);
+
                 break;
             }
             case Code.Ret:
                 if (_expressions.Count > 0) {
-                    _statements.Add(new ReturnStatement(instruction.Offset, _expressions.Pop()));
+                    AddStatement(instruction.Offset, new ReturnStatement(_expressions.Pop()));
                 } else {
-                    _statements.Add(new ReturnStatement(instruction.Offset, null));
+                    AddStatement(instruction.Offset, new ReturnStatement(null));
                 }
                 break;
             case Code.Clt:
@@ -163,8 +212,14 @@ public class ILTranslator {
                     condition = new BinaryExpression(condition, new NumberExpression(0), Operator.NotEqual);
                 }
 
-                _statements.Add(new AssignmentStatement(instruction.Offset - 1, "condition", condition));
-                _statements.Add(new BranchStatement(instruction.Offset, "condition", target.Offset));
+                AddStatement(instruction.Offset - 1, new AssignmentStatement(
+                    "condition",
+                    condition
+                ));
+
+                var statement = new BranchStatement("condition", null!);
+                FixBranchTarget(statement, instruction);
+                AddStatement(instruction.Offset, statement);
                 break;
             }
             
