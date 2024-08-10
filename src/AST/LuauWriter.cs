@@ -68,6 +68,9 @@ public class LuauWriter {
             case MethodDefinitionStatement methodDefinition:
                 DefineMethod(methodDefinition);
                 break;
+            case ThrowStatement:
+                builder.AppendLine($"{IndentString}error(\"Not implemented\")");
+                break;
             default:
                 throw new NotImplementedException(statement.GetType().Name);
         }
@@ -130,7 +133,7 @@ public class LuauWriter {
         builder.AppendLine($"{IndentString}end");
     }
 
-    private string[] badChars = new[] { "<", ">" };
+    private string[] badChars = new[] { "<", ">", "|", "`" };
 
     private string GetTypeName(TypeReference type) {
         var name = type.Name;
@@ -141,10 +144,14 @@ public class LuauWriter {
     }
 
     private string GetMethodName(MethodReference method) {
-        if (method.Name == ".ctor") {
+        if (method.Name == ".ctor" || method.Name == ".cctor") {
             return "new";
         }
-        return method.Name;
+        var name = method.Name;
+        foreach (var c in badChars) {
+            name = name.Replace(c, string.Empty);
+        }
+        return name;
     }
 
 
@@ -188,6 +195,10 @@ public class LuauWriter {
                 return $"{ProcessExpression(field.Value)}.{field.Name}";
             case ParameterExpression parameter:
                 return $"arg{parameter.Parameter.Sequence}";
+            case TypeExpression type:
+                return GetTypeName(type.Type);
+            case CreateObjectExpression createObject:
+                return "{}";
             default:
                 throw new NotImplementedException(expression.GetType().Name);
         }
@@ -196,7 +207,7 @@ public class LuauWriter {
     private string ImportMethod(MethodReference method) {
         var type = method.DeclaringType;
         if (type.Scope.Name != context.Module.Name && !imports.ContainsKey(type.FullName)) {
-            imports[type.Name] = $"@{type.FullName.Replace(".", "/")}";
+            imports[GetTypeName(type)] = $"@{type.FullName.Replace(".", "/")}";
         }
 
         return $"{GetTypeName(type)}.{GetMethodName(method)}";

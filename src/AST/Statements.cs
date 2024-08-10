@@ -50,6 +50,18 @@ public class IfStatement : Statement {
     }
 }
 
+public class ThrowStatement : Statement {
+    public Expression Expression { get; set; }
+
+    public ThrowStatement(Expression expression) {
+        Expression = expression;
+    }
+
+    public override string ToString() {
+        return $"throw {Expression}";
+    }
+}
+
 public class LoopStatement : Statement {
     public List<Statement> Body { get; set; }
     public Expression Condition { get; set; }

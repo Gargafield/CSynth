@@ -8,11 +8,13 @@ public class ILTranslator {
     public List<(int, GotoStatement)> targets = new();
     public List<(Range, Statement)> offsets = new();
     private Stack<Expression> _expressions = new();
+    private Stack<Stack<Expression>> _scopes = new();
     private int _lastOffset = -1;
     private MethodContext _context;
 
     private ILTranslator(MethodContext context) {
         _context = context;
+        _scopes.Push(_expressions);
     }
     
     public static List<Statement> Translate(MethodContext context) {
@@ -69,6 +71,15 @@ public class ILTranslator {
         return false;
     }
 
+    private void EnterScope() {
+        var copy = new Stack<Expression>(_expressions);
+        _scopes.Push(copy);
+    }
+
+    private void ExitScope() {
+        _expressions = _scopes.Pop();
+    }
+
     private bool FixBranchTarget(GotoStatement statement, Instruction instruction) {
         var target = (Instruction)instruction.Operand;
         if (TryGetTarget(target.Offset, out var targetStatement)) {
@@ -80,6 +91,14 @@ public class ILTranslator {
         }
 
         return false;
+    }
+
+    private Expression PopExpression() {
+        if (_expressions.Count == 0) {
+            Console.WriteLine("No expressions left");
+            return new NumberExpression(0);
+        }
+        return _expressions.Pop();
     }
 
     private void TranslateInstruction(Instruction instruction) {
@@ -100,8 +119,17 @@ public class ILTranslator {
                 _expressions.Push(new ParameterExpression(_context.Method.Parameters[(int)instruction.OpCode.Code - (int)Code.Ldarg_1]));
                 break;
             case Code.Ldarg_S:
-                _expressions.Push(new ParameterExpression(_context.Method.Parameters[(byte)instruction.Operand]));
+                _expressions.Push(new ParameterExpression((ParameterDefinition)instruction.Operand));
                 break;
+            case Code.Starg_S: {
+                // TODO: Fix this
+                var parameter = (ParameterDefinition)instruction.Operand;
+                AddStatement(instruction.Offset, new AssignmentStatement(
+                    new ParameterExpression(parameter),
+                    PopExpression()
+                ));
+                break;
+            }
             case Code.Ldloc_0:
             case Code.Ldloc_1:
             case Code.Ldloc_2:
@@ -117,13 +145,13 @@ public class ILTranslator {
             case Code.Stloc_3:
                 AddStatement(instruction.Offset, new AssignmentStatement(
                     $"loc{(int)instruction.OpCode.Code - (int)Code.Stloc_0}",
-                    _expressions.Pop()
+                    PopExpression()
                 ));
                 break;
             case Code.Stloc_S:
                 AddStatement(instruction.Offset, new AssignmentStatement(
                     $"loc{(byte)instruction.Operand}",
-                    _expressions.Pop()
+                    PopExpression()
                 ));
                 break;
             case Code.Ldc_I4:
@@ -148,24 +176,54 @@ public class ILTranslator {
             case Code.Mul:
             case Code.Div:
             case Code.Rem: {
-                var right = _expressions.Pop();
-                var left = _expressions.Pop();
+                var right = PopExpression();
+                var left = PopExpression();
                 _expressions.Push(new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name]));
                 break;
             }
             case Code.Ldstr:
                 _expressions.Push(new StringExpression((string)instruction.Operand));
                 break;
+            case Code.Ldnull:
+                _expressions.Push(new NumberExpression(0));
+                break;
+            case Code.Box: {
+                // TODO: Handle boxing
+                break;
+            }
+            case Code.Castclass:
+                // TODO: Handle casting
+                break;
+            case Code.Newobj: {
+                var method = (MethodReference)instruction.Operand;
+                var args = new List<Expression>();
+                
+                for (var i = 0; i < method.Parameters.Count; i++) {
+                    args.Add(PopExpression());
+                }
+                args.Reverse();
+
+                AddStatement(instruction.Offset, new AssignmentStatement(
+                    "result",
+                    new CreateObjectExpression(method.DeclaringType)
+                ));
+                AddStatement(instruction.Offset, new CallStatement(
+                    new CallExpression(method, args)
+                ));
+                _expressions.Push(new VariableExpression("result"));
+                break;
+            }
+            case Code.Callvirt:
             case Code.Call: {
                 var method = (MethodReference)instruction.Operand;
                 var args = new List<Expression>();
 
                 if (method.HasThis) {
-                    args.Add(_expressions.Pop());
+                    args.Add(PopExpression());
                 }
 
                 for (var i = 0; i < method.Parameters.Count; i++) {
-                    args.Add(_expressions.Pop());
+                    args.Add(PopExpression());
                 }
                 args.Reverse();
 
@@ -190,14 +248,33 @@ public class ILTranslator {
                 AddStatement(instruction.Offset, statement);
                 break;
             }
+            case Code.Leave_S: {
+                // TODO: Support try/catch/finally
+                var target = (Instruction)instruction.Operand;
+                var statement = new GotoStatement(null!);
+                FixBranchTarget(statement, instruction);
+                AddStatement(instruction.Offset, statement);
+                break;
+            }
+            case Code.Endfinally: {
+                // TODO: Support try/catch/finally
+                break;
+            }
+            case Code.Throw: {
+                var exception = PopExpression();
+                AddStatement(instruction.Offset, new ThrowStatement(exception));
+
+                ExitScope();
+                break;
+            }
             case Code.Beq_S:
             case Code.Bge_S:
             case Code.Bgt_S:
             case Code.Ble_S:
             case Code.Blt_S: {
                 var target = (Instruction)instruction.Operand;
-                var right = _expressions.Pop();
-                var left = _expressions.Pop();
+                var right = PopExpression();
+                var left = PopExpression();
                 AddStatement(instruction.Offset - 1, new AssignmentStatement(
                     "condition",
                     new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name])
@@ -207,27 +284,31 @@ public class ILTranslator {
                 FixBranchTarget(statement, instruction);
                 AddStatement(instruction.Offset, statement);
 
+                EnterScope();
+
                 break;
             }
             case Code.Ret:
                 if (_expressions.Count > 0) {
-                    AddStatement(instruction.Offset, new ReturnStatement(_expressions.Pop()));
+                    AddStatement(instruction.Offset, new ReturnStatement(PopExpression()));
                 } else {
                     AddStatement(instruction.Offset, new ReturnStatement(null));
                 }
+
+                ExitScope();
                 break;
             case Code.Clt:
             case Code.Cgt:
             case Code.Ceq: {
-                var right = _expressions.Pop();
-                var left = _expressions.Pop();
+                var right = PopExpression();
+                var left = PopExpression();
                 _expressions.Push(new BinaryExpression(left, right, OperatorMap[instruction.OpCode.Name]));
                 break;
             }
             case Code.Brtrue_S:
             case Code.Brfalse_S:{
                 var target = (Instruction)instruction.Operand;
-                var condition = _expressions.Pop();
+                var condition = PopExpression();
                 if (instruction.OpCode.Code == Code.Brfalse_S) {
                     condition = new UnaryExpression(condition);
                 }
@@ -243,17 +324,84 @@ public class ILTranslator {
                 var statement = new BranchStatement("condition", null!);
                 FixBranchTarget(statement, instruction);
                 AddStatement(instruction.Offset, statement);
+
+                EnterScope();
+                break;
+            }
+            case Code.Ldfld: {
+                var field = (FieldReference)instruction.Operand;
+                var obj = PopExpression() as Reference;
+                _expressions.Push(new FieldExpression(field.Name, obj!));
                 break;
             }
             case Code.Stfld: {
                 var field = (FieldReference)instruction.Operand;
-                var value = _expressions.Pop();
+                var value = PopExpression();
                 // TODO: Handle values taht are not references
-                var obj = _expressions.Pop() as Reference;
+                var obj = PopExpression() as Reference;
                 AddStatement(instruction.Offset, new AssignmentStatement(
                     new FieldExpression(field.Name, obj!),
                     value
                 ));
+                break;
+            }
+            case Code.Ldsflda:
+            case Code.Ldsfld: {
+                // TODO: Handle pointers to static fields
+                var field = (FieldReference)instruction.Operand;
+                _expressions.Push(new FieldExpression(
+                    field.Name,
+                    new TypeExpression(field.DeclaringType)
+                ));
+                break;
+            }
+            case Code.Stsfld: {
+                var field = (FieldReference)instruction.Operand;
+                var value = PopExpression();
+                AddStatement(instruction.Offset, new AssignmentStatement(
+                    new FieldExpression(
+                        field.Name,
+                        new TypeExpression(field.DeclaringType)
+                    ),
+                    value
+                ));
+                break;
+            }
+            case Code.Ldloca_S: {
+                var variable = (VariableDefinition)instruction.Operand;
+                _expressions.Push(new VariableExpression($"loc{variable.Index}"));
+                break;
+            }
+            case Code.Ldftn: {
+                var method = (MethodReference)instruction.Operand;
+                _expressions.Push(new FieldExpression(
+                    method.Name,
+                    new TypeExpression(method.DeclaringType)
+                ));
+                break;
+            }
+            case Code.Dup: {
+                var expression = PopExpression();
+                if (expression is Reference) {
+                    _expressions.Push(expression);
+                    _expressions.Push(expression);
+                }
+                else {
+                    // Store the value in a temporary variable
+                    var temp = new VariableExpression($"temp{instruction.Offset}");
+                    AddStatement(instruction.Offset, new AssignmentStatement(
+                        temp.Name,
+                        expression
+                    ));
+
+                    _expressions.Push(temp);
+                    _expressions.Push(temp);
+                }
+                break;
+            }
+
+            case Code.Pop: {
+                PopExpression();
                 break;
             }
             

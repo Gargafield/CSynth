@@ -177,6 +177,39 @@ public class FieldExpression : Reference
     }
 }
 
+public class CreateObjectExpression : Expression
+{
+    public TypeReference Type { get; set; }
+
+    public CreateObjectExpression(TypeReference type)
+    {
+        Type = type;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitCreateObjectExpression(this)) return;
+    }
+
+    public override string ToString() => $"new {Type.Name}";
+}
+
+public class TypeExpression : Reference
+{
+    public TypeReference Type { get; set; }
+
+    public TypeExpression(TypeReference type)
+    {
+        Type = type;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitTypeExpression(this);
+    }
+
+    public override string GetFullName() => Type.Name;
+    public override string ToString() => Type.Name;
+}
+
 public class SelfExpression : Reference {
 
     public override void Accept(ExpressionVisitor visitor) {
