@@ -9,12 +9,16 @@ public class ILTranslator {
     public List<(Range, Statement)> offsets = new();
     private Stack<Expression> _expressions = new();
     private int _lastOffset = -1;
+    private MethodContext _context;
 
+    private ILTranslator(MethodContext context) {
+        _context = context;
+    }
     
-    public static List<Statement> Translate(IEnumerable<Instruction> instructions) {
-        var translator = new ILTranslator();
+    public static List<Statement> Translate(MethodContext context) {
+        var translator = new ILTranslator(context);
 
-        foreach (var instruction in instructions) {
+        foreach (var instruction in context.Method.Body.Instructions) {
             translator.TranslateInstruction(instruction);
         }
 
@@ -84,13 +88,19 @@ public class ILTranslator {
             case Code.Nop:
                 break;
             case Code.Ldarg_0:
+                if (_context.Method.HasThis) {
+                    _expressions.Push(new SelfExpression());
+                } else {
+                    _expressions.Push(new ParameterExpression(_context.Method.Parameters[0]));
+                }
+                break;
             case Code.Ldarg_1:
             case Code.Ldarg_2:
             case Code.Ldarg_3:
-                _expressions.Push(new VariableExpression($"arg{(int)instruction.OpCode.Code - (int)Code.Ldarg_0}"));
+                _expressions.Push(new ParameterExpression(_context.Method.Parameters[(int)instruction.OpCode.Code - (int)Code.Ldarg_1]));
                 break;
             case Code.Ldarg_S:
-                _expressions.Push(new VariableExpression($"arg{(byte)instruction.Operand}"));
+                _expressions.Push(new ParameterExpression(_context.Method.Parameters[(byte)instruction.Operand]));
                 break;
             case Code.Ldloc_0:
             case Code.Ldloc_1:
@@ -149,10 +159,23 @@ public class ILTranslator {
             case Code.Call: {
                 var method = (MethodReference)instruction.Operand;
                 var args = new List<Expression>();
+
+                if (method.HasThis) {
+                    args.Add(_expressions.Pop());
+                }
+
                 for (var i = 0; i < method.Parameters.Count; i++) {
                     args.Add(_expressions.Pop());
                 }
                 args.Reverse();
+
+                if (method.ReturnType.FullName == "System.Void") {
+                    AddStatement(instruction.Offset, new CallStatement(
+                        new CallExpression(method, args)
+                    ));
+                    break;
+                }
+
                 AddStatement(instruction.Offset, new AssignmentStatement(
                     "result",
                     new CallExpression(method, args)
@@ -220,6 +243,17 @@ public class ILTranslator {
                 var statement = new BranchStatement("condition", null!);
                 FixBranchTarget(statement, instruction);
                 AddStatement(instruction.Offset, statement);
+                break;
+            }
+            case Code.Stfld: {
+                var field = (FieldReference)instruction.Operand;
+                var value = _expressions.Pop();
+                // TODO: Handle values taht are not references
+                var obj = _expressions.Pop() as Reference;
+                AddStatement(instruction.Offset, new AssignmentStatement(
+                    new FieldExpression(field.Name, obj!),
+                    value
+                ));
                 break;
             }
             

@@ -12,6 +12,8 @@ public class Compiler
     public List<Statement> Statements => Scopes.Peek();
     public HashSet<string> Locals { get; } = new();
 
+    private VariableVisitor variableVisitor = new();
+
     public Dictionary<string, Type> Variables { get; } = new() {
         { "HeaderExit", typeof(int) },
         { "LoopExit", typeof(bool) }
@@ -22,13 +24,25 @@ public class Compiler
         Scopes.Push(new());
     }
 
-    public static List<Statement> Compile(ICollection<Instruction> instructions) {
-        var statements = ILTranslator.Translate(instructions);
+    public static List<Statement> Compile(MethodContext method) {
+        if (method.TranslationContext.Debug) {
+            foreach (var instruction in method.Method.Body.Instructions)
+                Console.WriteLine(instruction);
+        }
+
+        var statements = ILTranslator.Translate(method);        
         var flow = FlowInfo.From(statements);
         Restructure.RestructureCFG(flow.CFG);
         var tree = ControlTree.From(flow.CFG);
         var compiler = new Compiler(tree);
         compiler.Compile();
+
+        if (method.TranslationContext.Debug) {
+            Console.WriteLine("Statements:");
+            foreach (var statement in compiler.Statements)
+                Console.WriteLine(statement);
+        }
+
         return compiler.Statements;
     }
 
@@ -41,7 +55,8 @@ public class Compiler
     private void Compile() {
         CompileStructure(tree.Structure);
 
-        Statements.Insert(0, new DefineVariablesStatement(Locals.ToList()));
+        if (Locals.Count > 0)
+            Statements.Insert(0, new DefineVariablesStatement(Locals.ToList()));
     }
 
     private void CompileStructure(Structure structure) {
@@ -149,8 +164,13 @@ public class Compiler
 
     private void ProcessStatement(Statement statement) {
         if (statement is AssignmentStatement assignment) {
-            Locals.Add(assignment.Variable);
+
+            variableVisitor.Variables.Clear();
+            assignment.Variable.Accept(variableVisitor);
+
+            foreach (var variable in variableVisitor.Variables) {
+                Locals.Add(variable.Name);
+            }
         }
     }
-
 }

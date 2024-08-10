@@ -5,6 +5,7 @@ namespace CSynth.AST;
 
 public class LuauWriter {
     private List<Statement> statements;
+    private ModuleContext context;
 
     private Dictionary<string, string> imports = new();
 
@@ -12,12 +13,13 @@ public class LuauWriter {
     private int indent = 0;
     private string IndentString => new string(' ', indent * 4);
 
-    private LuauWriter(List<Statement> statements) {
+    private LuauWriter(List<Statement> statements, ModuleContext context) {
         this.statements = statements;
+        this.context = context;
     }
 
-    public static string Write(List<Statement> statements) {
-        var writer = new LuauWriter(statements);
+    public static string Write(List<Statement> statements, ModuleContext context) {
+        var writer = new LuauWriter(statements, context);
         return writer.Write();
     }
 
@@ -39,7 +41,7 @@ public class LuauWriter {
                 ProcessDoWhile(doWhile);
                 break;
             case AssignmentStatement assignment:
-                builder.AppendLine($"{IndentString}{assignment.Variable} = {ProcessExpression(assignment.Expression)}");
+                builder.AppendLine($"{IndentString}{ProcessExpression(assignment.Variable)} = {ProcessExpression(assignment.Expression)}");
                 break;
             case IfStatement ifStatement:
                 ProcessIf(ifStatement);
@@ -54,6 +56,18 @@ public class LuauWriter {
                 builder.AppendLine($"{IndentString}local {declaration}");
                 break;
             }
+            case CallStatement callStatement:
+                builder.AppendLine($"{IndentString}{ProcessExpression(callStatement.Expression)}");
+                break;
+            case ModuleDefinitionStatement moduleDefinition:
+                DefineModule(moduleDefinition);
+                break;
+            case TypeDefinitionStatement typeDefinition:
+                DefineType(typeDefinition);
+                break;
+            case MethodDefinitionStatement methodDefinition:
+                DefineMethod(methodDefinition);
+                break;
             default:
                 throw new NotImplementedException(statement.GetType().Name);
         }
@@ -90,6 +104,48 @@ public class LuauWriter {
         builder.AppendLine($"{IndentString}end");
     }
 
+    private void DefineModule(ModuleDefinitionStatement moduleDefinition) {
+        builder.AppendLine($"local {moduleDefinition.Module.Name} = {{}}");
+    }
+
+    private void DefineType(TypeDefinitionStatement typeDefinition) {
+        builder.AppendLine($"local {GetTypeName(typeDefinition.Type)} = {{}}");
+    }
+
+    private void DefineMethod(MethodDefinitionStatement methodDefinition) {
+        var method = methodDefinition.Method;
+        builder.Append($"{IndentString}function {GetTypeName(method.DeclaringType)}.{GetMethodName(method)}");
+
+        var methods = method.Parameters.Select(p => $"arg{p.Sequence}").ToList();
+        if (method.HasThis) {
+            methods.Insert(0, "self");
+        }
+
+        builder.Append($"({string.Join(", ", methods)})");
+        builder.AppendLine();
+        indent++;
+        foreach (var statement in methodDefinition.Body)
+            ProcessStatement(statement);
+        indent--;
+        builder.AppendLine($"{IndentString}end");
+    }
+
+    private string[] badChars = new[] { "<", ">" };
+
+    private string GetTypeName(TypeReference type) {
+        var name = type.Name;
+        foreach (var c in badChars) {
+            name = name.Replace(c, string.Empty);
+        }
+        return name;
+    }
+
+    private string GetMethodName(MethodReference method) {
+        if (method.Name == ".ctor") {
+            return "new";
+        }
+        return method.Name;
+    }
 
 
     private Dictionary<Operator, string> OperatorMap = new() {
@@ -126,17 +182,23 @@ public class LuauWriter {
             }
             case BoolExpression boolean:
                 return boolean.Value ? "true" : "false";
+            case SelfExpression self:
+                return "self";
+            case FieldExpression field:
+                return $"{ProcessExpression(field.Value)}.{field.Name}";
+            case ParameterExpression parameter:
+                return $"arg{parameter.Parameter.Sequence}";
             default:
-                throw new NotImplementedException();
+                throw new NotImplementedException(expression.GetType().Name);
         }
     }
 
     private string ImportMethod(MethodReference method) {
         var type = method.DeclaringType;
-        if (!imports.ContainsKey(type.FullName)) {
+        if (type.Scope.Name != context.Module.Name && !imports.ContainsKey(type.FullName)) {
             imports[type.Name] = $"@{type.FullName.Replace(".", "/")}";
         }
 
-        return $"{type.Name}.{method.Name}";
+        return $"{GetTypeName(type)}.{GetMethodName(method)}";
     }
 }

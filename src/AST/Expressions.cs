@@ -3,7 +3,9 @@
 namespace CSynth.AST;
 
 public abstract class Expression
-{ }
+{
+    public abstract void Accept(ExpressionVisitor visitor);
+}
 
 public enum Operator {
     Add,
@@ -34,10 +36,13 @@ public class BinaryExpression : Expression
         Operator = op;
     }
 
-    public override string ToString()
-    {
-        return $"({Left} {Operator} {Right})";
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitBinaryExpression(this)) return;
+        Left.Accept(visitor);
+        Right.Accept(visitor);
     }
+
+    public override string ToString() =>  $"({Left} {Operator} {Right})";
 }
 
 public class UnaryExpression : Expression
@@ -49,10 +54,12 @@ public class UnaryExpression : Expression
         Operand = operand;
     }
 
-    public override string ToString()
-    {
-        return $"!{Operand}";
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitUnaryExpression(this)) return;
+        Operand.Accept(visitor);
     }
+
+    public override string ToString() => $"!{Operand}";
 }
 
 public class BoolExpression : Expression
@@ -67,10 +74,11 @@ public class BoolExpression : Expression
         Value = value;
     }
 
-    public override string ToString()
-    {
-        return Value ? "true" : "false";
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitBoolExpression(this);
     }
+
+    public override string ToString() => Value ? "true" : "false";
 }
 
 public class NumberExpression : Expression
@@ -82,10 +90,11 @@ public class NumberExpression : Expression
         Value = value;
     }
 
-    public override string ToString()
-    {
-        return Value.ToString();
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitNumberExpression(this);
     }
+
+    public override string ToString() => Value.ToString();
 }
 
 public class StringExpression : Expression
@@ -97,10 +106,11 @@ public class StringExpression : Expression
         Value = value;
     }
 
-    public override string ToString()
-    {
-        return $"\"{Value}\"";
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitStringExpression(this);
     }
+
+    public override string ToString() => $"\"{Value}\"";
 }
 
 public class CallExpression : Expression
@@ -114,23 +124,81 @@ public class CallExpression : Expression
         Arguments = arguments;
     }
 
-    public override string ToString()
-    {
-        return $"{Method.Name}({string.Join(", ", Arguments)})";
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitCallExpression(this)) return;
+        foreach (var arg in Arguments) {
+            arg.Accept(visitor);
+        }
     }
+
+    public override string ToString() => $"{Method.Name}({string.Join(", ", Arguments)})";
 }
 
-public class VariableExpression : Expression
-{
-    public string Name { get; set; }
+public abstract class Reference : Expression {
+    public virtual string Name { get; set; } = "";
+    public abstract string GetFullName();
+}
 
-    public VariableExpression(string name)
-    {
+public class VariableExpression : Reference
+{
+    public VariableExpression(string name) {
         Name = name;
     }
 
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitVariableExpression(this);
+    }
+
+    public override string GetFullName() => Name;
+    public override string ToString() => Name;
+}
+
+public class FieldExpression : Reference
+{
+    public Reference Value { get; set; }
+    public string Field => Name;
+
+    public FieldExpression(string field, Reference value)
+    {
+        Name = field;
+        Value = value;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitFieldExpression(this)) return;
+        Value.Accept(visitor);
+    }
+
+    public override string GetFullName() => $"{Field}.{Name}";
+
     public override string ToString()
     {
-        return Name;
+        return GetFullName();
     }
+}
+
+public class SelfExpression : Reference {
+
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitSelfExpression(this);
+    }
+
+    public override string GetFullName() => "self";
+    public override string ToString() => "self";
+}
+
+public class ParameterExpression : Reference {
+    public ParameterDefinition Parameter { get; set; }
+
+    public ParameterExpression(ParameterDefinition parameter)
+    {
+        Parameter = parameter;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitParameterExpression(this);
+    }
+
+    public override string GetFullName() => Parameter.Name;
+    public override string ToString() => Parameter.Name;
 }

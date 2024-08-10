@@ -6,10 +6,15 @@ namespace CSynth.AST;
 public abstract class Statement { }
 
 public class AssignmentStatement : Statement {
-    public string Variable { get; set; }
+    public Reference Variable { get; set; }
     public Expression Expression { get; set; }
 
     public AssignmentStatement(string variable, Expression expression) {
+        Variable = new VariableExpression(variable);
+        Expression = expression;
+    }
+
+    public AssignmentStatement(Reference variable, Expression expression) {
         Variable = variable;
         Expression = expression;
     }
@@ -141,6 +146,30 @@ public class DefineVariablesStatement : Statement {
     }
 }
 
+public class CallStatement : Statement {
+    public CallExpression Expression { get; set; }
+
+    public CallStatement(CallExpression expression) {
+        Expression = expression;
+    }
+
+    public override string ToString() {
+        return Expression.ToString();
+    }
+}
+
+public class ModuleDefinitionStatement : Statement {
+    public ModuleDefinition Module { get; set; }
+
+    public ModuleDefinitionStatement(ModuleDefinition module) {
+        Module = module;
+    }
+
+    public override string ToString() {
+        return $"module {Module.Name}";
+    }
+}
+
 public class MethodDefinitionStatement : Statement {
     public MethodDefinition Method { get; set; }
     public List<Statement> Body { get; set; }
@@ -161,5 +190,17 @@ public class MethodDefinitionStatement : Statement {
         }
         builder.Append("end\n");
         return builder.ToString();
+    }
+}
+
+public class TypeDefinitionStatement : Statement {
+    public TypeDefinition Type { get; set; }
+
+    public TypeDefinitionStatement(TypeDefinition type) {
+        Type = type;
+    }
+
+    public override string ToString() {
+        return $"type {Type.Name}";
     }
 }
