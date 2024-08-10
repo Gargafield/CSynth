@@ -14,7 +14,7 @@ public class Compiler
 
     private VariableVisitor variableVisitor = new();
 
-    public Dictionary<string, Type> Variables { get; } = new() {
+    public Dictionary<string, System.Type> Variables { get; } = new() {
         { "HeaderExit", typeof(int) },
         { "LoopExit", typeof(bool) }
     };

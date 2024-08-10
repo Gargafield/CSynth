@@ -18,15 +18,8 @@ public class Module {
         var statements = new List<Statement>();
 
         foreach (var type in Definition.Types.Where(t => t.IsClass)) {
-            statements.Add(new TypeDefinitionStatement(type));
-            foreach (var method in type.Methods) {
-                if (!method.HasBody) continue;
-
-                var instructions = method.Body.Instructions;
-                var compiled = Compiler.Compile(new MethodContext(method, Context));
-                
-                statements.Add(new MethodDefinitionStatement(method, compiled));
-            }
+            var _type = new Type(new TypeContext(type, Context));
+            statements.AddRange(_type.Compile());
         }
 
         if (Definition.EntryPoint != null) {

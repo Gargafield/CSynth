@@ -13,6 +13,16 @@ public class MethodContext {
     }
 }
 
+public class TypeContext {
+    public TypeDefinition Type { get; }
+    public TranslationContext TranslationContext { get; set; }
+
+    public TypeContext(TypeDefinition type, TranslationContext context) {
+        Type = type;
+        TranslationContext = context;
+    }
+}
+
 public class ModuleContext {
     public ModuleDefinition Module { get; }
     public TranslationContext TranslationContext { get; set; }
