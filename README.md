@@ -1,7 +1,7 @@
 
 ## CSynth
 
-A **highly** experimental common intermediate language (.NET) to [Luau](https://github.com/luau-lang/luau).
+A **highly** experimental common intermediate language (.NET) to [Luau](https://github.com/luau-lang/luau) transpiler and runtime.
 
 > [!CAUTION]
 >DO NOT USE THIS IN PRODUCTION
