@@ -17,6 +17,15 @@ public class Program
 
         var debug = args.Contains("--debug") || args.Contains("-d");
 
+        if (args.Contains("--graph")) {
+            var path = args[0];
+            var text = File.ReadAllText(path);
+            var cfg = CFG.FromEquality(text);
+            Restructure.RestructureCFG(cfg);
+            Console.WriteLine(cfg.ToMermaid());
+            return;
+        }
+
         var context = new TranslationContext() {
             Debug = debug
         };
