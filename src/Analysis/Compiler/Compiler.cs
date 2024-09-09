@@ -32,7 +32,19 @@ public class Compiler
 
         var statements = ILTranslator.Translate(method);        
         var flow = FlowInfo.From(statements);
+
+        if (method.TranslationContext.Debug) {
+            Console.WriteLine("CFG:");
+            Console.WriteLine(flow.CFG.ToDot());
+        }
+
         Restructure.RestructureCFG(flow.CFG);
+
+        if (method.TranslationContext.Debug) {
+            Console.WriteLine("CFG (restructured):");
+            Console.WriteLine(flow.CFG.ToDot());
+        }
+
         var tree = ControlTree.From(flow.CFG);
         var compiler = new Compiler(tree);
         compiler.Compile();
