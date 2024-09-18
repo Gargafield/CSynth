@@ -177,6 +177,31 @@ public class FieldExpression : Reference
     }
 }
 
+public class IndexExpression : Reference
+{
+    public Reference Value { get; set; }
+    public Expression Index { get; set; }
+
+    public IndexExpression(Reference value, Expression index)
+    {
+        Value = value;
+        Index = index;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitIndexExpression(this)) return;
+        Value.Accept(visitor);
+        Index.Accept(visitor);
+    }
+
+    public override string GetFullName() => $"{Value}[{Index}]";
+
+    public override string ToString()
+    {
+        return GetFullName();
+    }
+}
+
 public class CreateObjectExpression : Expression
 {
     public TypeReference Type { get; set; }
@@ -234,4 +259,23 @@ public class ParameterExpression : Reference {
 
     public override string GetFullName() => Parameter.Name;
     public override string ToString() => Parameter.Name;
+}
+
+public class ArrayExpression : Expression
+{
+    public TypeReference Type { get; set; }
+    public Expression Size { get; set; }
+
+    public ArrayExpression(TypeReference type, Expression size)
+    {
+        Type = type;
+        Size = size;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitArrayExpression(this)) return;
+        Size.Accept(visitor);
+    }
+
+    public override string ToString() => $"new {Type.Name}[{Size}]";
 }

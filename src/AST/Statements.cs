@@ -216,3 +216,19 @@ public class TypeDefinitionStatement : Statement {
         return $"type {Type.Name}";
     }
 }
+
+public class ArrayAssignmentStatement : Statement {
+    public Reference Variable { get; set; }
+    public Expression Index { get; set; }
+    public Expression Expression { get; set; }
+
+    public ArrayAssignmentStatement(Reference variable, Expression index, Expression expression) {
+        Variable = variable;
+        Index = index;
+        Expression = expression;
+    }
+
+    public override string ToString() {
+        return $"{Variable}[{Index}] = {Expression}";
+    }
+}

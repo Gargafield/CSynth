@@ -10,8 +10,10 @@ public abstract class ExpressionVisitor {
     public virtual bool VisitCallExpression(CallExpression expression) => true;
     public virtual bool VisitVariableExpression(VariableExpression expression) => true;
     public virtual bool VisitFieldExpression(FieldExpression expression) => true;
+    public virtual bool VisitIndexExpression(IndexExpression expression) => true;
     public virtual bool VisitSelfExpression(SelfExpression expression) => true;
     public virtual bool VisitParameterExpression(ParameterExpression expression) => true;
     public virtual bool VisitCreateObjectExpression(CreateObjectExpression expression) => true;
     public virtual bool VisitTypeExpression(TypeExpression expression) => true;
+    public virtual bool VisitArrayExpression(ArrayExpression expression) => true;
 }

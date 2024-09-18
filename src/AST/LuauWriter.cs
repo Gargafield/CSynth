@@ -71,6 +71,9 @@ public class LuauWriter {
             case ThrowStatement:
                 builder.AppendLine($"{IndentString}error(\"Not implemented\")");
                 break;
+            case ArrayAssignmentStatement arrayAssignment:
+                builder.AppendLine($"{IndentString}{ProcessExpression(arrayAssignment.Variable)}[{ProcessExpression(arrayAssignment.Index)}] = {ProcessExpression(arrayAssignment.Expression)}");
+                break;
             default:
                 throw new NotImplementedException(statement.GetType().Name);
         }
@@ -193,12 +196,16 @@ public class LuauWriter {
                 return "self";
             case FieldExpression field:
                 return $"{ProcessExpression(field.Value)}.{field.Name}";
+            case IndexExpression index:
+                return $"{ProcessExpression(index.Value)}[{ProcessExpression(index.Index)}]";
             case ParameterExpression parameter:
                 return $"arg{parameter.Parameter.Sequence}";
             case TypeExpression type:
                 return GetTypeName(type.Type);
             case CreateObjectExpression createObject:
                 return "{}";
+            case ArrayExpression array:
+                return $"table.create({ProcessExpression(array.Size)})";
             default:
                 throw new NotImplementedException(expression.GetType().Name);
         }

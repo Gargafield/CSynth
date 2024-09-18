@@ -34,7 +34,6 @@ public class Compiler
                 Console.WriteLine(instruction);
         }
 
-        var statements = ILTranslator.Translate(method);        
         var flow = FlowInfo.From(method.Method.Body.Instructions);
 
         if (method.TranslationContext.Debug) {
@@ -244,6 +243,9 @@ public class Compiler
                 Expressions.Push(new BinaryExpression(left, right, op));
                 break;
             }
+            case Code.Conv_I8: {
+                break;
+            }
             case Code.Ceq:
             case Code.Cgt:
             case Code.Clt: {
@@ -262,7 +264,6 @@ public class Compiler
             case Code.Br_S: {
                 break; // Unconditional branch
             }
-
             case Code.Brfalse:
             case Code.Brfalse_S: {
                 Expression condition = Expressions.Pop();
@@ -304,6 +305,21 @@ public class Compiler
                 Expressions.Push(new BinaryExpression(left, right, op));
                 break;
             }
+            case Code.Ldelem_I4:
+            case Code.Ldelem_I8: {
+                var index = Expressions.Pop();
+                var array = GetReference(Expressions.Pop());
+                Expressions.Push(new IndexExpression(array, index));
+                break;
+            }
+            case Code.Stelem_I4:
+            case Code.Stelem_I8: {
+                var value = Expressions.Pop();
+                var index = Expressions.Pop();
+                var array = GetReference(Expressions.Pop());
+                Statements.Add(new ArrayAssignmentStatement(array, index, value));
+                break;
+            }
             case Code.Ret: {
                 if (method.ReturnType.FullName != "System.Void")
                     Statements.Add(new ReturnStatement(Expressions.Pop()));
@@ -332,8 +348,24 @@ public class Compiler
                 }
                 break;
             }
+            case Code.Newarr: {
+                var type = instruction.GetValue<TypeReference>();
+                var size = Expressions.Pop();
+                Expressions.Push(new ArrayExpression(type, size));
+                break;
+            }
             default:
                 throw new NotImplementedException(instruction.OpCode.ToString());
         }
+    }
+
+    private Reference GetReference(Expression expression) {
+        if (expression is Reference reference) {
+            return reference;
+        }
+
+        var name = $"temp_{Statements.Count}";
+        Statements.Add(new AssignmentStatement(name, expression));
+        return new VariableExpression(name);
     }
 }
