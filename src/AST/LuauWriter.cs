@@ -119,9 +119,9 @@ public class LuauWriter {
         var method = methodDefinition.Method;
         builder.Append($"{IndentString}function {GetTypeName(method.DeclaringType)}.{GetMethodName(method)}");
 
-        var methods = method.Parameters.Select(p => $"arg{p.Sequence}").ToList();
+        var methods = method.Parameters.Select(p => p.Name).ToList();
         if (method.HasThis) {
-            methods.Insert(0, "self");
+            methods.Insert(0, "this");
         }
 
         builder.Append($"({string.Join(", ", methods)})");

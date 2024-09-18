@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using CSynth.AST;
+using Mono.Cecil.Cil;
 
 namespace CSynth.AST;
 
@@ -79,14 +80,14 @@ public class BlockCollection {
 }
 
 public class BasicBlock : Block {
-    public List<Statement> Statements { get; set; } = new();
+    public List<Instruction> Instructions { get; set; } = new();
 
-    protected BasicBlock(List<Statement> statement) {
-        Statements = statement;
+    protected BasicBlock(List<Instruction> instructions) {
+        Instructions = instructions;
     }
 
-    public static BasicBlock Create(CFG cfg, List<Statement> statements) {
-        return cfg.Blocks.Add(new BasicBlock(statements));
+    public static BasicBlock Create(CFG cfg, List<Instruction> instructions) {
+        return cfg.Blocks.Add(new BasicBlock(instructions));
     }
 }
 
@@ -118,19 +119,22 @@ public static class BlockVariable {
     public const string BranchControl = "BranchControl";
 }
 
-public class AssignmentBlock : BasicBlock {
-    protected AssignmentBlock() : base(new List<Statement>()) { }
+public class AssignmentBlock : SyntheticBlock {
+    public List<KeyValuePair<string, Expression>> Instructions { get; set; } = new();
+
+    protected AssignmentBlock() : base() { }
 
     public static AssignmentBlock Create(BlockCollection blocks) {
         return blocks.Add(new AssignmentBlock());
     }
 
     public void AddVariable(string name, int value) {
-        Statements.Add(new AssignmentStatement(name, new NumberExpression(value)));
+        Instructions.Add(new KeyValuePair<string, Expression>(name, new NumberExpression(value)));
     }
 
     public void AddVariable(string name, bool value) {
-        Statements.Add(new AssignmentStatement(name, value ? BoolExpression.True : BoolExpression.False));
+        var expr = value ? BoolExpression.True : BoolExpression.False;
+        Instructions.Add(new KeyValuePair<string, Expression>(name, expr));
     }
 }
 

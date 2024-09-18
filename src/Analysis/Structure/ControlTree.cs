@@ -61,7 +61,7 @@ public class ControlTree {
                 stack.Push(branch.Exit.Id);
             }
             else {
-                Structure.Children.Add(new BlockStructure(current));
+                Structure.Children.Add(current);
 
                 foreach (var succ in cfg.Blocks.Successors(current.Id)) {
                     if (blocks.Contains(succ) && !visited.Contains(succ)) {
@@ -83,14 +83,21 @@ public class ControlTree {
         return ToString(Structure).TrimEnd();
     }
 
-    private string ToString(Structure structure, int indent = 0) {
+    private string ToString(object obj, int indent = 0) {
+        if (obj is Block block) {
+            return $"{new string(' ', indent * 2)}{block}\n";
+        }
+
         var builder = new StringBuilder();
         builder.Append(' ', indent * 2);
-        builder.AppendLine(structure.ToString());
+        builder.Append($"{obj}\n");
 
-        foreach (var children in structure.Children) {
-            builder.Append(ToString(children, indent + 1));
+        if (obj is Structure structure) {
+            foreach (var children in structure.Children) {
+                builder.Append(ToString(children, indent + 1));
+            }
         }
+
         return builder.ToString();
     }
 }

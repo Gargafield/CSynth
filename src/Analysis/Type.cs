@@ -22,6 +22,7 @@ public class Type {
         foreach (var method in Definition.Methods) {
             if (!method.HasBody) continue;
 
+
             var compiled = Compiler.Compile(new MethodContext(method, Context));
             
             statements.Add(new MethodDefinitionStatement(method, compiled));

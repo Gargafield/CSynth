@@ -22,7 +22,7 @@ public class CFG : IEnumerable<Block> {
 
         var cfg = new CFG();
 
-        var split = text.Split(Environment.NewLine);
+        var split = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         var blocks = new Dictionary<Block, List<int>>();
 
         var counter = 0;
@@ -83,7 +83,7 @@ public class CFG : IEnumerable<Block> {
 
             var block = Blocks[blockId];
             if (block is BasicBlock basicBlock) {
-                foreach (var instruction in basicBlock.Statements) {
+                foreach (var instruction in basicBlock.Instructions) {
                     Console.WriteLine(instruction);
                 }
             }
@@ -103,8 +103,9 @@ public class CFG : IEnumerable<Block> {
             var block = Blocks[blockId];
 
             var label = block switch {
-                BasicBlock basicBlock => string.Join(Environment.NewLine, basicBlock.Statements),
+                BasicBlock basicBlock => string.Join(Environment.NewLine, basicBlock.Instructions),
                 BranchBlock branchBlock => $"Branch {branchBlock.Variable}",
+                AssignmentBlock assignmentBlock => string.Join(Environment.NewLine, assignmentBlock.Instructions.Select(i => $"{i.Key} = {i.Value}")),
                 _ => ""
             };
             var regionId = ((List<Region>)Regions).LastOrDefault(r => r.Blocks.Contains(block.Id))?.Id;

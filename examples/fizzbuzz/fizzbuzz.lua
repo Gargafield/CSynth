@@ -2,39 +2,33 @@ local Object = require("@System/Object")
 local Console = require("@System/Console")
 local Module = {}
 local FizzBuzz = {}
-function FizzBuzz.Main(arg0)
-    local loc0, condition, LoopControl
-    loc0 = 1
+function FizzBuzz.Main(args)
+    local local_0
+    local_0 = 1
     repeat
-        condition = loc0 <= 100
-        if not condition then
-            LoopControl = 0
-        else
-            condition = loc0 % 15 ~= 0
-            if not condition then
-                Console.WriteLine("FizzBuzz")
-            else
-                condition = loc0 % 3 ~= 0
-                if not condition then
-                    Console.WriteLine("Fizz")
-                else
-                    condition = loc0 % 5 ~= 0
-                    if not condition then
-                        Console.WriteLine("Buzz")
+        if local_0 <= 100 then
+            if local_0 % 15 ~= 0 then
+                if local_0 % 3 ~= 0 then
+                    if local_0 % 5 ~= 0 then
+                        Console.WriteLine(local_0)
                     else
-                        Console.WriteLine(loc0)
+                        Console.WriteLine("Buzz")
                     end
+                else
+                    Console.WriteLine("Fizz")
                 end
+            else
+                Console.WriteLine("FizzBuzz")
             end
-            loc0 = loc0 + 1
+            local_0 = local_0 + 1
             LoopControl = 1
+        else
+            LoopControl = 0
         end
     until LoopControl == 0
-    return 
 end
-function FizzBuzz.new(self)
-    Object.new(self)
-    return 
+function FizzBuzz.new(this)
+    Object.new(this)
 end
 FizzBuzz.Main()
 
