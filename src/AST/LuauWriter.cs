@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Mono.Cecil;
 
 namespace CSynth.AST;
@@ -147,14 +147,24 @@ public class LuauWriter {
     }
 
     private string GetMethodName(MethodReference method) {
+        string baseName = null!;
+        
         if (method.Name == ".ctor" || method.Name == ".cctor") {
-            return "new";
+            baseName = "new";
         }
-        var name = method.Name;
+        else {
+            baseName = method.Name;
         foreach (var c in badChars) {
-            name = name.Replace(c, string.Empty);
+                baseName = baseName.Replace(c, string.Empty);
         }
-        return name;
+        }
+
+        if (method.Parameters.Count == 0)
+            return baseName;
+        
+        string parameters = string.Join("_", method.Parameters.Select(p => GetTypeName(p.ParameterType)));
+        
+        return baseName + '_' + parameters;
     }
 
 
