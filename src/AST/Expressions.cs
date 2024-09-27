@@ -279,3 +279,19 @@ public class ArrayExpression : Expression
 
     public override string ToString() => $"new {Type.Name}[{Size}]";
 }
+
+public class LengthExpression : Expression {
+    public Reference Value { get; set; }
+
+    public LengthExpression(Reference value)
+    {
+        Value = value;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitLengthExpression(this)) return;
+        Value.Accept(visitor);
+    }
+
+    public override string ToString() => $"{Value}.Length";
+}

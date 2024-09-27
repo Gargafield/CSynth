@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Mono.Cecil;
 
 namespace CSynth.AST;
@@ -154,9 +154,9 @@ public class LuauWriter {
         }
         else {
             baseName = method.Name;
-        foreach (var c in badChars) {
+            foreach (var c in badChars) {
                 baseName = baseName.Replace(c, string.Empty);
-        }
+            }
         }
 
         if (method.Parameters.Count == 0)
@@ -216,6 +216,8 @@ public class LuauWriter {
                 return "{}";
             case ArrayExpression array:
                 return $"table.create({ProcessExpression(array.Size)})";
+            case LengthExpression length:
+                return $"#({ProcessExpression(length.Value)}) + 1";
             default:
                 throw new NotImplementedException(expression.GetType().Name);
         }

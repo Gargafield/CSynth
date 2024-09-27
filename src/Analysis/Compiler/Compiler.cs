@@ -224,6 +224,26 @@ public class Compiler
                 Statements.Add(new AssignmentStatement(name, value));
                 break;
             }
+            case Code.Ldloca:
+            case Code.Ldloca_S: {
+                // TODO: Is this correct? Can we do this?
+                VariableDefinition variable = instruction.GetVariable(method.Body);
+                string name = $"local_{variable.Index}";
+                Expressions.Push(new VariableExpression(name));
+                break;
+            }
+            case Code.Ldlen: {
+                var array = GetReference(Expressions.Pop());
+                Expressions.Push(new LengthExpression(array));
+                break;
+            }
+            case Code.Ldtoken: {
+                // TODO: By no means correct, but whatever
+                var token = instruction.GetValue<IMetadataTokenProvider>().MetadataToken;
+                
+                Expressions.Push(new VariableExpression(token.ToString()));
+                break;
+            }
             case Code.Add:
             case Code.Sub:
             case Code.Mul:
@@ -243,6 +263,19 @@ public class Compiler
                 Expressions.Push(new BinaryExpression(left, right, op));
                 break;
             }
+            case Code.Dup: {
+                var value = Expressions.Pop();
+                if (value is Reference reference) {
+                    Expressions.Push(value);
+                    Expressions.Push(reference);
+                } else {
+                    Reference newReference = GetReference(value);
+                    Expressions.Push(newReference);
+                    Expressions.Push(newReference);
+                }
+                break;
+            }
+            case Code.Conv_I4:
             case Code.Conv_I8: {
                 break;
             }
@@ -352,6 +385,10 @@ public class Compiler
                 var type = instruction.GetValue<TypeReference>();
                 var size = Expressions.Pop();
                 Expressions.Push(new ArrayExpression(type, size));
+                break;
+            }
+            case Code.Box: {
+                // TODO: Do nothing?
                 break;
             }
             default:

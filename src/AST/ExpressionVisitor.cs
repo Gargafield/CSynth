@@ -16,4 +16,5 @@ public abstract class ExpressionVisitor {
     public virtual bool VisitCreateObjectExpression(CreateObjectExpression expression) => true;
     public virtual bool VisitTypeExpression(TypeExpression expression) => true;
     public virtual bool VisitArrayExpression(ArrayExpression expression) => true;
+    public virtual bool VisitLengthExpression(LengthExpression expression) => true;
 }
