@@ -21,7 +21,7 @@ function Fibonacci.Main()
     local_3 = 0
     repeat
         if local_3 < local_0 then
-            Console.WriteLine(local_1[local_3])
+            Console.WriteLine_Int32(local_1[local_3])
             local_3 = local_3 + 1
             LoopControl = 1
         else

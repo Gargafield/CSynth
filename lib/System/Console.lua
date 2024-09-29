@@ -5,6 +5,10 @@ function Console.WriteLine()
     print()
 end
 
+function Console.WriteLine_Int32(value)
+    print(value)
+end
+
 function Console.WriteLine_String(value)
     print(value)
 end

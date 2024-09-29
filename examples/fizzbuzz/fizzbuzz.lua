@@ -2,7 +2,7 @@ local Object = require("@System/Object")
 local Console = require("@System/Console")
 local Module = {}
 local FizzBuzz = {}
-function FizzBuzz.Main(args)
+function FizzBuzz.Main()
     local local_0
     local_0 = 1
     repeat
@@ -10,15 +10,15 @@ function FizzBuzz.Main(args)
             if local_0 % 15 ~= 0 then
                 if local_0 % 3 ~= 0 then
                     if local_0 % 5 ~= 0 then
-                        Console.WriteLine(local_0)
+                        Console.WriteLine_Int32(local_0)
                     else
-                        Console.WriteLine("Buzz")
+                        Console.WriteLine_String("Buzz")
                     end
                 else
-                    Console.WriteLine("Fizz")
+                    Console.WriteLine_String("Fizz")
                 end
             else
-                Console.WriteLine("FizzBuzz")
+                Console.WriteLine_String("FizzBuzz")
             end
             local_0 = local_0 + 1
             LoopControl = 1

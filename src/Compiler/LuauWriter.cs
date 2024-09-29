@@ -140,6 +140,10 @@ public class LuauWriter {
     private string[] badChars = new[] { "<", ">", "|", "`" };
 
     private string GetTypeName(TypeReference type) {
+        if (type.IsArray) {
+            return "Array_" + GetTypeName(type.GetElementType());
+        }
+        
         var name = type.Name;
         foreach (var c in badChars) {
             name = name.Replace(c, string.Empty);
