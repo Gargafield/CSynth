@@ -1,7 +1,8 @@
 ﻿using System.Text;
+using CSynth.AST;
 using Mono.Cecil;
 
-namespace CSynth.AST;
+namespace CSynth.Compiler;
 
 public class LuauWriter {
     private List<Statement> statements;

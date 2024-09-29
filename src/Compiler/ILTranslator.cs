@@ -1,7 +1,8 @@
-﻿using Mono.Cecil;
+﻿using CSynth.AST;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace CSynth.AST;
+namespace CSynth.Compiler;
 
 public class ILTranslator {
     public List<Statement> Statements = new();

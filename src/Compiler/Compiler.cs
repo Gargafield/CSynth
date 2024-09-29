@@ -1,10 +1,10 @@
-﻿using System.Diagnostics;
+﻿using CSynth.Analysis;
 using CSynth.AST;
 using CSynth.Transformation;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace CSynth.Analysis;
+namespace CSynth.Compiler;
 
 public class Compiler
 {
@@ -14,13 +14,6 @@ public class Compiler
     public List<Statement> Statements => Scopes.Peek();
     public Stack<Expression> Expressions { get; } = new();
     public HashSet<string> Locals { get; } = new();
-
-    private VariableVisitor variableVisitor = new();
-
-    public Dictionary<string, System.Type> Variables { get; } = new() {
-        { "HeaderExit", typeof(int) },
-        { "LoopExit", typeof(bool) }
-    };
 
     private Compiler(ControlTree tree, MethodDefinition method) {
         this.tree = tree;

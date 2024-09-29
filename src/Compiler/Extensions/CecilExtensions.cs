@@ -1,8 +1,7 @@
-using System.Buffers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace CSynth.Analysis;
+namespace CSynth.Compiler;
 
 public static class CecilExtensions {
     
