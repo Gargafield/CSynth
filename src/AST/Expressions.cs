@@ -113,6 +113,15 @@ public class StringExpression : Expression
     public override string ToString() => $"\"{Value}\"";
 }
 
+public class NullExpression : Expression
+{
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitNullExpression(this);
+    }
+
+    public override string ToString() => "null";
+}
+
 public class CallExpression : Expression
 {
     public MethodReference Method { get; set; }

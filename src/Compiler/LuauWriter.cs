@@ -201,6 +201,8 @@ public class LuauWriter {
                 return number.Value.ToString();
             case StringExpression str:
                 return $"\"{str.Value}\"";
+            case NullExpression _:
+                return "nil";
             case CallExpression call: {
                 // TODO: Fix method handle name
                 return $"{ImportMethod(call.Method)}({string.Join(", ", call.Arguments.Select(ProcessExpression))})";

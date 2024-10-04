@@ -7,6 +7,7 @@ public abstract class ExpressionVisitor {
     public virtual bool VisitBoolExpression(BoolExpression expression) => true;
     public virtual bool VisitNumberExpression(NumberExpression expression) => true;
     public virtual bool VisitStringExpression(StringExpression expression) => true;
+    public virtual bool VisitNullExpression(NullExpression expression) => true;
     public virtual bool VisitCallExpression(CallExpression expression) => true;
     public virtual bool VisitVariableExpression(VariableExpression expression) => true;
     public virtual bool VisitFieldExpression(FieldExpression expression) => true;

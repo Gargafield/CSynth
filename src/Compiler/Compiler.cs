@@ -6,13 +6,18 @@ using Mono.Cecil.Cil;
 
 namespace CSynth.Compiler;
 
+public class Scope {
+    public List<Statement> Statements { get; } = new();
+    public Stack<Expression> Expressions { get; } = new();
+}
+
 public class Compiler
 {
     private MethodDefinition method;
     private ControlTree tree;
-    public Stack<List<Statement>> Scopes { get; } = new();
-    public List<Statement> Statements => Scopes.Peek();
-    public Stack<Expression> Expressions { get; } = new();
+    public Stack<Scope> Scopes { get; } = new();
+    public List<Statement> Statements => Scopes.Peek().Statements;
+    public Stack<Expression> Expressions => Scopes.Peek().Expressions;
     public HashSet<string> Locals { get; } = new();
 
     private Compiler(ControlTree tree, MethodDefinition method) {
@@ -92,7 +97,7 @@ public class Compiler
         var branch = block! as BranchBlock;
 
         Statements.Add(new DoWhileStatement(
-            body,
+            body.Statements,
             new VariableExpression(branch!.Variable)
         ));
     }
@@ -109,21 +114,47 @@ public class Compiler
         CompileBlock(structure.Branch);
 
         var expression = Expressions.Pop();
+        List<Scope> scopes = new();
 
         foreach (var child in structure.Children) {
             var condition = structure.Conditions.First(c => c.Item1 == child).Item2;
             Scopes.Push(new());
-            CompileStructure(child);           
+            CompileStructure(child);
+
+            var scope = Scopes.Pop();
+            scopes.Add(scope);
 
             conditions.Add(new Tuple<Expression?, List<Statement>>(
                 expression,
-                Scopes.Pop()
+                scope.Statements
             ));
 
             expression = null;
         }
 
+        FixExpressionOverflows(scopes);
+
         Statements.Add(new IfStatement(conditions));
+    }
+
+    private void FixExpressionOverflows(IEnumerable<Scope> scopes) {
+        var expressionOverflow = scopes.Max(s => s.Expressions.Count);
+        if (expressionOverflow == 0)
+            return;
+
+        for (int i = 0; i < expressionOverflow; i++) {
+            var name = $"overflow_{i}";
+            Statements.Add(new AssignmentStatement(name, new NullExpression()));
+            Expressions.Push(new VariableExpression(name));
+        }
+
+        foreach (var scope in scopes) {
+            var expressions = scope.Expressions.ToList();
+            for (int i = 0; i < expressions.Count; i++) {
+                var expression = expressions[i];
+                scope.Statements.Add(new AssignmentStatement($"overflow_{i}", expression));
+            }
+        }
     }
 
     private void CompileLinear(LinearStructure structure) {
@@ -235,6 +266,10 @@ public class Compiler
                 var token = instruction.GetValue<IMetadataTokenProvider>().MetadataToken;
                 
                 Expressions.Push(new VariableExpression(token.ToString()));
+                break;
+            }
+            case Code.Ldnull: {
+                Expressions.Push(new NullExpression());
                 break;
             }
             case Code.Add:
@@ -351,6 +386,7 @@ public class Compiler
                     Statements.Add(new ReturnStatement(Expressions.Pop()));
                 break;
             }
+            case Code.Callvirt:
             case Code.Call: {
                 var method = instruction.GetValue<MethodReference>();
                 var arguments = new List<Expression>();
@@ -380,6 +416,7 @@ public class Compiler
                 Expressions.Push(new ArrayExpression(type, size));
                 break;
             }
+            case Code.Unbox_Any:
             case Code.Box: {
                 // TODO: Do nothing?
                 break;
