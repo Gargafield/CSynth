@@ -1,7 +1,7 @@
 
 local Object = {}
 
-function Object.ToString(obj) 
+function Object.ToString_6830888(obj) 
     return tostring(obj)
 end
 

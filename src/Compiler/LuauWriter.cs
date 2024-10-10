@@ -137,17 +137,27 @@ public class LuauWriter {
         builder.AppendLine($"{IndentString}end");
     }
 
-    private string[] badChars = new[] { "<", ">", "|", "`" };
+    private string[] badChars = new[] { "<", ">", "|", "`", "!" };
+
+    private string ReplaceBadChars(string name) {
+        foreach (var c in badChars) {
+            name = name.Replace(c, string.Empty);
+        }
+        return name;
+    }
 
     private string GetTypeName(TypeReference type) {
         if (type.IsArray) {
             return "Array_" + GetTypeName(type.GetElementType());
+        
+        }
+
+        var name = ReplaceBadChars(type.Name);
+        while (type.DeclaringType != null) {
+            type = type.DeclaringType;
+            name = $"{ReplaceBadChars(type.Name)}.{name}";
         }
         
-        var name = type.Name;
-        foreach (var c in badChars) {
-            name = name.Replace(c, string.Empty);
-        }
         return name;
     }
 
@@ -158,18 +168,10 @@ public class LuauWriter {
             baseName = "new";
         }
         else {
-            baseName = method.Name;
-            foreach (var c in badChars) {
-                baseName = baseName.Replace(c, string.Empty);
-            }
+            baseName = ReplaceBadChars(method.Name);
         }
-
-        if (method.Parameters.Count == 0)
-            return baseName;
-        
-        string parameters = string.Join("_", method.Parameters.Select(p => GetTypeName(p.ParameterType)));
-        
-        return baseName + '_' + parameters;
+                
+        return baseName + '_' + method.Resolve().RVA;
     }
 
 
@@ -205,7 +207,7 @@ public class LuauWriter {
                 return "nil";
             case CallExpression call: {
                 // TODO: Fix method handle name
-                return $"{ImportMethod(call.Method)}({string.Join(", ", call.Arguments.Select(ProcessExpression))})";
+                return $"{ImportMethod(call.Method)}({string.Join(", ", call.Arguments.Select(ProcessExpression))}) -- {call.Method.FullName}";
             }
             case BoolExpression boolean:
                 return boolean.Value ? "true" : "false";
@@ -230,10 +232,25 @@ public class LuauWriter {
         }
     }
 
+    private string GetImportPath(TypeReference type) {
+        var path = string.IsNullOrEmpty(type.Namespace) ? type.Name : $"{type.Namespace}.{type.Name}";
+
+        if (type.IsNested)
+            path = $"{GetImportPath(type.DeclaringType)}/{path}";
+
+        return ReplaceBadChars(path.Replace(".", "/"));
+    }
+
     private string ImportMethod(MethodReference method) {
         var type = method.DeclaringType;
-        if (type.Scope.Name != context.Module.Name && !imports.ContainsKey(type.FullName)) {
-            imports[GetTypeName(type)] = $"@{type.FullName.Replace(".", "/")}";
+
+        TypeReference importType = type;
+        while (importType.DeclaringType != null)
+            importType = importType.DeclaringType;
+
+        if (importType.Scope.Name != context.Module.Name && !imports.ContainsKey(importType.FullName)) {
+            var path = GetImportPath(importType);
+            imports[GetTypeName(importType)] = $"@{path}";
         }
 
         return $"{GetTypeName(type)}.{GetMethodName(method)}";

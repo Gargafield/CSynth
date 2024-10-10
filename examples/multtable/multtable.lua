@@ -2,13 +2,13 @@ local Object = require("@System/Object")
 local Console = require("@System/Console")
 local Module = {}
 local MultiplicationTable = {}
-function MultiplicationTable.PrintTable_Int32(num)
+function MultiplicationTable.PrintTable_8272(num)
     local local_0, local_1
     local_0 = 1
     repeat
         if local_0 <= 50 then
             local_1 = num * local_0
-            Console.WriteLine_String_Object_Object_Object("{0} * {1} = {2}", num, local_0, local_1)
+            Console.WriteLine_72344("{0} * {1} = {2}", num, local_0, local_1) -- System.Void System.Console::WriteLine(System.String,System.Object,System.Object,System.Object)
             local_0 = local_0 + 1
             LoopControl = 1
         else
@@ -16,7 +16,7 @@ function MultiplicationTable.PrintTable_Int32(num)
         end
     until LoopControl == 0
 end
-function MultiplicationTable.Main()
+function MultiplicationTable.Main_8332()
     local local_0, local_1, local_2
     temp_0 = table.create(6)
     temp_0[0] = 2
@@ -30,9 +30,9 @@ function MultiplicationTable.Main()
     repeat
         if local_1 < #(local_0) + 1 then
             local_2 = local_0[local_1]
-            Console.WriteLine_String_Object("Multiplication table for {0}:", local_2)
-            MultiplicationTable.PrintTable_Int32(local_2)
-            Console.WriteLine()
+            Console.WriteLine_72312("Multiplication table for {0}:", local_2) -- System.Void System.Console::WriteLine(System.String,System.Object)
+            MultiplicationTable.PrintTable_8272(local_2) -- System.Void MultiplicationTable::PrintTable(System.Int32)
+            Console.WriteLine_72092() -- System.Void System.Console::WriteLine()
             local_1 = local_1 + 1
             LoopControl = 1
         else
@@ -40,8 +40,8 @@ function MultiplicationTable.Main()
         end
     until LoopControl == 0
 end
-function MultiplicationTable.new(this)
-    Object.new(this)
+function MultiplicationTable.new_8423(this)
+    Object.new_6830880(this) -- System.Void System.Object::.ctor()
 end
-MultiplicationTable.Main()
+MultiplicationTable.Main_8332() -- System.Void MultiplicationTable::Main()
 

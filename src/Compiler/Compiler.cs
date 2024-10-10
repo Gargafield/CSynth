@@ -307,6 +307,10 @@ public class Compiler
             case Code.Conv_I8: {
                 break;
             }
+            case Code.Conv_R4:
+            case Code.Conv_R8: {
+                break;
+            }
             case Code.Ceq:
             case Code.Cgt:
             case Code.Clt: {
@@ -393,9 +397,11 @@ public class Compiler
                 for (int i = 0; i < method.Parameters.Count; i++) {
                     arguments.Add(Expressions.Pop());
                 }
-
-                if (method.HasThis)
-                    arguments.Add(Expressions.Pop());
+                
+                if (method.HasThis) {
+                    var reference = GetReference(Expressions.Pop());
+                    arguments.Add(reference);
+                }
 
                 arguments.Reverse();
                 
@@ -416,9 +422,30 @@ public class Compiler
                 Expressions.Push(new ArrayExpression(type, size));
                 break;
             }
+            case Code.Newobj: {
+                var ctor = instruction.GetValue<MethodReference>();
+                var arguments = new List<Expression>();
+                for (int i = 0; i < method.Parameters.Count; i++) {
+                    arguments.Add(Expressions.Pop());
+                }
+
+                arguments.Reverse();
+
+                Expressions.Push(new CallExpression(ctor, arguments));
+                break;
+            }
             case Code.Unbox_Any:
             case Code.Box: {
                 // TODO: Do nothing?
+                break;
+            }
+            case Code.Constrained: {
+                // TODO: Do nothing?
+                break;
+            }
+            case Code.Endfinally:
+            case Code.Leave_S: {
+                // TODO: Implement exception handling
                 break;
             }
             default:

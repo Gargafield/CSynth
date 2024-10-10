@@ -54,7 +54,9 @@ public class FlowInfo
             return pairs.Count - 1;
         }
 
-        foreach (var (start, end) in pairs) {
+        for (int i = 0; i < pairs.Count; i++) {
+            var (start, end) = pairs[i];
+
             var chunkInstructions = instructions.Skip(start).Take(end - start).ToList();
             var chunkTargets = new List<int>();
 
@@ -66,7 +68,7 @@ public class FlowInfo
                     break;
                 case FlowControl.Cond_Branch:
                     chunkTargets.Add(pairIndexOf(instructions.IndexOf((Instruction)last.Operand)));
-                    chunkTargets.Add(pairIndexOf(end + 1));
+                    chunkTargets.Add(i + 1);
                     break;
                 case FlowControl.Return:
                     chunkTargets.Add(-1);
