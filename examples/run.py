@@ -41,6 +41,7 @@ print(f"Output written to {output_path}")
 
 # if there's a output.txt file, try compare lua output with it
 output_txt_path = f"{example_path}/output.txt"
+input_txt_path = f"{example_path}/input.txt"
 
 if os.path.exists(output_txt_path):
     with open(output_txt_path, 'r') as f:
@@ -49,9 +50,15 @@ if os.path.exists(output_txt_path):
     # run example.lua and capture stdout
     lune_executable = shutil.which("lune")
 
+    input_contents = ""
+    if os.path.exists(input_txt_path):
+        with open(input_txt_path, 'r') as f:
+            input_contents = f.read()
+
+
     if lune_executable:
         args = [lune_executable, "run", output_path]
-        result = subprocess.run(args, capture_output=True, text=True)
+        result = subprocess.run(args, input=input_contents, capture_output=True, text=True)
     else:
         print("No lune executable found in path")
         sys.exit(1)
