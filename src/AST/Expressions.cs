@@ -113,6 +113,21 @@ public class StringExpression : Expression
     public override string ToString() => $"\"{Value}\"";
 }
 
+public class ByteArrayExpression : Expression {
+    public byte[] Value { get; set; }
+
+    public ByteArrayExpression(byte[] value)
+    {
+        Value = value;
+    }
+
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitByteArrayExpression(this);
+    }
+
+    public override string ToString() => $"byte[{Value.Length}]";
+}
+
 public class NullExpression : Expression
 {
     public override void Accept(ExpressionVisitor visitor) {

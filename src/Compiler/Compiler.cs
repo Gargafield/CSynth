@@ -263,9 +263,15 @@ public class Compiler
             }
             case Code.Ldtoken: {
                 // TODO: By no means correct, but whatever
-                var token = instruction.GetValue<IMetadataTokenProvider>().MetadataToken;
+                var token = instruction.GetValue<IMetadataTokenProvider>();
                 
-                Expressions.Push(new VariableExpression(token.ToString()));
+                switch (token) {
+                    case FieldDefinition field:
+                        Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.RVA)));
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
                 break;
             }
             case Code.Ldnull: {

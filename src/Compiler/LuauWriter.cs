@@ -116,7 +116,7 @@ public class LuauWriter {
     }
 
     private void DefineType(TypeDefinitionStatement typeDefinition) {
-        builder.AppendLine($"local {GetTypeName(typeDefinition.Type)} = {{}}");
+        builder.AppendLine($"{GetTypeName(typeDefinition.Type)} = {{}}");
     }
 
     private void DefineMethod(MethodDefinitionStatement methodDefinition) {
@@ -203,6 +203,8 @@ public class LuauWriter {
                 return number.Value.ToString();
             case StringExpression str:
                 return $"\"{str.Value}\"";
+            case ByteArrayExpression byteArray:
+                return "buffer.fromstring(\"" + string.Join("", byteArray.Value.Select(b => $"\\x{b:X2}")) + "\")";
             case NullExpression _:
                 return "nil";
             case CallExpression call: {
