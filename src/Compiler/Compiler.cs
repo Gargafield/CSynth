@@ -8,7 +8,7 @@ namespace CSynth.Compiler;
 
 public class Scope {
     public List<Statement> Statements { get; } = new();
-    public Stack<Expression> Expressions { get; } = new();
+    public Stack<Expression> Expressions { get; init; } = new();
 }
 
 public class Compiler
@@ -27,11 +27,6 @@ public class Compiler
     }
 
     public static List<Statement> Compile(MethodContext method) {
-        if (method.TranslationContext.Debug) {
-            foreach (var instruction in method.Method.Body.Instructions)
-                Console.WriteLine(instruction);
-        }
-
         var flow = FlowInfo.From(method.Method.Body.Instructions);
 
         if (method.TranslationContext.Debug) {
@@ -50,12 +45,6 @@ public class Compiler
 
         var compiler = new Compiler(tree, method.Method);
         compiler.Compile();
-
-        if (method.TranslationContext.Debug) {
-            Console.WriteLine("Statements:");
-            foreach (var statement in compiler.Statements)
-                Console.WriteLine(statement);
-        }
 
         return compiler.Statements;
     }
@@ -88,17 +77,22 @@ public class Compiler
 
     private void CompileLoop(LoopStructure loop) {
         Scopes.Push(new());
-        foreach (var structure in loop.Children.Take(loop.Children.Count - 1)) {
+        foreach (var structure in loop.Children.Take(Math.Max(loop.Children.Count - 1, 1))) {
             CompileStructure(structure);
         }
 
         var body = Scopes.Pop();
         var block = loop.Children.Last() as Block;
-        var branch = block! as BranchBlock;
+
+        Expression? condition = null;
+        if (block is BranchBlock branch)
+            condition = new VariableExpression(branch!.Variable);
+        else
+            condition = body.Expressions.Pop();
 
         Statements.Add(new DoWhileStatement(
             body.Statements,
-            new VariableExpression(branch!.Variable)
+            condition
         ));
     }
 
@@ -107,18 +101,20 @@ public class Compiler
         var branch = structure.Branch as BranchBlock;
 
         // TODO: Support more than 2 branches
-        if (structure.Children.Count > 2) {
+        if (structure.Conditions.Count > 2) {
             throw new NotImplementedException("Only binary branches are supported");
         }
         
         CompileBlock(structure.Branch);
 
         var expression = Expressions.Pop();
+        var expressions = Expressions;
         List<Scope> scopes = new();
 
-        foreach (var child in structure.Children) {
-            var condition = structure.Conditions.First(c => c.Item1 == child).Item2;
-            Scopes.Push(new());
+        foreach (var (child, condition) in structure.Conditions) {
+            Scopes.Push(new() {
+                Expressions = new Stack<Expression>(expressions)
+            });
             CompileStructure(child);
 
             var scope = Scopes.Pop();
@@ -138,7 +134,7 @@ public class Compiler
     }
 
     private void FixExpressionOverflows(IEnumerable<Scope> scopes) {
-        var expressionOverflow = scopes.Max(s => s.Expressions.Count);
+        var expressionOverflow = scopes.Max(s => s.Expressions.Count) - Expressions.Count;
         if (expressionOverflow == 0)
             return;
 
@@ -175,8 +171,8 @@ public class Compiler
                     Statements.Add(new AssignmentStatement(name, value));
                 }
                 break;
-            case BranchBlock: {
-                // Ignore?
+            case BranchBlock branch: {
+                Expressions.Push(new VariableExpression(branch.Variable));
                 break;
             }
             case EntryBlock:
@@ -209,6 +205,21 @@ public class Compiler
                 Expressions.Push(new NumberExpression(value));
                 break;
             }
+            case Code.Ldc_I8: {
+                long value = instruction.GetValue<long>();
+                Expressions.Push(new NumberExpression(value));
+                break;
+            }
+            case Code.Ldc_R4: {
+                float value = instruction.GetValue<float>();
+                Expressions.Push(new NumberExpression(value));
+                break;
+            }
+            case Code.Ldc_R8: {
+                double value = instruction.GetValue<double>();
+                Expressions.Push(new NumberExpression(value));
+                break;
+            }
             case Code.Ldstr: {
                 string value = (string)instruction.Operand;
                 Expressions.Push(new StringExpression(value));
@@ -227,10 +238,26 @@ public class Compiler
                 break;
             }
             case Code.Ldarg_0:
+            case Code.Ldarg_1:
             case Code.Ldarg_2:
             case Code.Ldarg_3:
             case Code.Ldarg:
             case Code.Ldarg_S: {
+                ParameterDefinition parameter = instruction.GetParameter(method);
+                Expressions.Push(new VariableExpression(parameter.Name));
+                break;
+            }
+            case Code.Starg:
+            case Code.Starg_S : {
+                // TODO: Do this right (support out parameters)
+                ParameterDefinition parameter = instruction.GetParameter(method);
+                string name = parameter.Name;
+                var value = Expressions.Pop();
+                Statements.Add(new AssignmentStatement(name, value));
+                break;
+            }
+            case Code.Ldarga:
+            case Code.Ldarga_S: {
                 ParameterDefinition parameter = instruction.GetParameter(method);
                 Expressions.Push(new VariableExpression(parameter.Name));
                 break;
@@ -256,6 +283,41 @@ public class Compiler
                 Expressions.Push(new VariableExpression(name));
                 break;
             }
+            case Code.Ldsflda: {
+                FieldReference field = instruction.GetValue<FieldReference>();
+                Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA)));
+                break;
+            }
+            case Code.Ldsfld: {
+                FieldReference field = instruction.GetValue<FieldReference>();
+                Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA)));
+                break;
+            }
+            case Code.Stsfld: {
+                FieldReference field = instruction.GetValue<FieldReference>();
+                var value = Expressions.Pop();
+                Statements.Add(new AssignmentStatement(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA)), value));
+                break;
+            }
+            case Code.Ldflda: {
+                FieldReference field = instruction.GetValue<FieldReference>();
+                var reference = GetReference(Expressions.Pop());
+                Expressions.Push(new FieldExpression(field.Name, reference));
+                break;
+            }
+            case Code.Ldfld: {
+                FieldReference field = instruction.GetValue<FieldReference>();
+                var reference = GetReference(Expressions.Pop());
+                Expressions.Push(new FieldExpression(field.Name, reference));
+                break;
+            }
+            case Code.Stfld: {
+                FieldReference field = instruction.GetValue<FieldReference>();
+                var value = Expressions.Pop();
+                var reference = GetReference(Expressions.Pop());
+                Statements.Add(new AssignmentStatement(new FieldExpression(field.Name, reference), value));
+                break;
+            }
             case Code.Ldlen: {
                 var array = GetReference(Expressions.Pop());
                 Expressions.Push(new LengthExpression(array));
@@ -269,32 +331,88 @@ public class Compiler
                     case FieldDefinition field:
                         Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.RVA)));
                         break;
+                    case TypeDefinition type:
+                        Expressions.Push(new TypeExpression(type));
+                        break;
+                    case TypeReference typeReference:
+                        Expressions.Push(new TypeExpression(typeReference));
+                        break;
                     default:
                         throw new NotImplementedException();
                 }
+                break;
+            }
+            case Code.Ldftn: {
+                var method = instruction.GetValue<MethodReference>();
+                Expressions.Push(new MethodExpression(method));
+                break;
+            }
+            case Code.Ldvirtftn: {
+                var method = instruction.GetValue<MethodReference>();
+                var reference = GetReference(Expressions.Pop());
+                Expressions.Push(new VirtualFunctionExpression(reference, method));
                 break;
             }
             case Code.Ldnull: {
                 Expressions.Push(new NullExpression());
                 break;
             }
+            case Code.Localloc: {
+                var type = new TypeReference("System", "Byte", method.Module, method.Module);
+                Expressions.Push(new ArrayExpression(type, Expressions.Pop()));
+                break;
+            }
             case Code.Add:
+            case Code.Add_Ovf:
+            case Code.Add_Ovf_Un:
             case Code.Sub:
+            case Code.Sub_Ovf:
+            case Code.Sub_Ovf_Un:
             case Code.Mul:
+            case Code.Mul_Ovf:
+            case Code.Mul_Ovf_Un:
             case Code.Div:
+            case Code.Div_Un:
             case Code.Rem:
-            case Code.And: {
+            case Code.Rem_Un:
+            case Code.And:
+            case Code.Or:
+            case Code.Xor:
+            case Code.Shr:
+            case Code.Shr_Un:
+            case Code.Shl: {
                 var right = Expressions.Pop();
                 var left = Expressions.Pop();
                 var op = instruction.OpCode.Code switch {
                     Code.Add => Operator.Add,
+                    Code.Add_Ovf => Operator.Add,
+                    Code.Add_Ovf_Un => Operator.Add,
                     Code.Sub => Operator.Subtract,
+                    Code.Sub_Ovf => Operator.Subtract,
+                    Code.Sub_Ovf_Un => Operator.Subtract,
                     Code.Mul => Operator.Multiply,
+                    Code.Mul_Ovf => Operator.Multiply,
+                    Code.Mul_Ovf_Un => Operator.Multiply,
                     Code.Div => Operator.Divide,
+                    Code.Div_Un => Operator.Divide,
                     Code.Rem => Operator.Modulo,
+                    Code.Rem_Un => Operator.Modulo,
+                    Code.And => Operator.BitwiseAnd,
+                    Code.Or => Operator.BitwiseOr,
+                    Code.Xor => Operator.BitwiseXor,
+                    Code.Shr => Operator.RightShift,
+                    Code.Shr_Un => Operator.RightShift,
+                    Code.Shl => Operator.LeftShift,
                     _ => throw new NotImplementedException()
                 };
                 Expressions.Push(new BinaryExpression(left, right, op));
+                break;
+            }
+            case Code.Not:
+            case Code.Neg: {
+                // TODO: Not and neg
+                var value = Expressions.Pop();
+                Expressions.Push(new UnaryExpression(value));
                 break;
             }
             case Code.Dup: {
@@ -309,23 +427,59 @@ public class Compiler
                 }
                 break;
             }
-            case Code.Conv_I4:
-            case Code.Conv_I8: {
+            case Code.Pop: {
+                Expressions.Pop();
                 break;
             }
+            case Code.Conv_U:
+            case Code.Conv_U1:
+            case Code.Conv_U2:
+            case Code.Conv_U4:
+            case Code.Conv_U8:
+            case Code.Conv_I:
+            case Code.Conv_I1:
+            case Code.Conv_I2:
+            case Code.Conv_I4:
+            case Code.Conv_I8: 
+            case Code.Conv_R_Un:
             case Code.Conv_R4:
-            case Code.Conv_R8: {
+            case Code.Conv_R8:
+            case Code.Conv_Ovf_U:
+            case Code.Conv_Ovf_U_Un:
+            case Code.Conv_Ovf_U1:
+            case Code.Conv_Ovf_U1_Un:
+            case Code.Conv_Ovf_U2:
+            case Code.Conv_Ovf_U2_Un:
+            case Code.Conv_Ovf_U4:
+            case Code.Conv_Ovf_U4_Un:
+            case Code.Conv_Ovf_U8:
+            case Code.Conv_Ovf_U8_Un:
+            case Code.Conv_Ovf_I:
+            case Code.Conv_Ovf_I_Un:
+            case Code.Conv_Ovf_I1:
+            case Code.Conv_Ovf_I1_Un:
+            case Code.Conv_Ovf_I2:
+            case Code.Conv_Ovf_I2_Un:
+            case Code.Conv_Ovf_I4:
+            case Code.Conv_Ovf_I4_Un:
+            case Code.Conv_Ovf_I8:
+            case Code.Conv_Ovf_I8_Un: {
+                // TODO: Conversion
                 break;
             }
             case Code.Ceq:
             case Code.Cgt:
-            case Code.Clt: {
+            case Code.Cgt_Un:
+            case Code.Clt:
+            case Code.Clt_Un: {
                 var right = Expressions.Pop();
                 var left = Expressions.Pop();
                 var op = instruction.OpCode.Code switch {
                     Code.Ceq => Operator.Equal,
                     Code.Cgt => Operator.GreaterThan,
+                    Code.Cgt_Un => Operator.GreaterThan,
                     Code.Clt => Operator.LessThan,
+                    Code.Clt_Un => Operator.LessThan,
                     _ => throw new NotImplementedException()
                 };
                 Expressions.Push(new BinaryExpression(left, right, op));
@@ -356,7 +510,17 @@ public class Compiler
             case Code.Ble:
             case Code.Ble_S:
             case Code.Blt:
-            case Code.Blt_S: {
+            case Code.Blt_S:
+            case Code.Bge_Un:
+            case Code.Bge_Un_S:
+            case Code.Bne_Un:
+            case Code.Bne_Un_S:
+            case Code.Bgt_Un:
+            case Code.Bgt_Un_S:
+            case Code.Ble_Un:
+            case Code.Ble_Un_S:
+            case Code.Blt_Un:
+            case Code.Blt_Un_S: {
                 Expression right = Expressions.Pop();
                 Expression left = Expressions.Pop();
 
@@ -371,29 +535,112 @@ public class Compiler
                     Code.Ble_S => Operator.LessThanOrEqual,
                     Code.Blt => Operator.LessThan,
                     Code.Blt_S => Operator.LessThan,
+                    Code.Bge_Un => Operator.GreaterThanOrEqual,
+                    Code.Bge_Un_S => Operator.GreaterThanOrEqual,
+                    Code.Bne_Un => Operator.NotEqual,
+                    Code.Bne_Un_S => Operator.NotEqual,
+                    Code.Bgt_Un => Operator.GreaterThan,
+                    Code.Bgt_Un_S => Operator.GreaterThan,
+                    Code.Ble_Un => Operator.LessThanOrEqual,
+                    Code.Ble_Un_S => Operator.LessThanOrEqual,
+                    Code.Blt_Un => Operator.LessThan,
+                    Code.Blt_Un_S => Operator.LessThan,
                     _ => throw new NotImplementedException()
                 };
                 Expressions.Push(new BinaryExpression(left, right, op));
                 break;
             }
-            case Code.Ldelem_I4:
-            case Code.Ldelem_I8: {
+            case Code.Isinst: {
+                // TODO: Isinst (needs typetags on values)
+                var reference = GetReference(Expressions.Pop());
+                Expressions.Push(reference);
+                break;
+            }
+            case Code.Ldelem_Any: {
+                var type = instruction.GetValue<TypeReference>();
                 var index = Expressions.Pop();
                 var array = GetReference(Expressions.Pop());
                 Expressions.Push(new IndexExpression(array, index));
                 break;
             }
-            case Code.Stelem_I4:
-            case Code.Stelem_I8: {
+            case Code.Stelem_Any: {
                 var value = Expressions.Pop();
                 var index = Expressions.Pop();
                 var array = GetReference(Expressions.Pop());
                 Statements.Add(new ArrayAssignmentStatement(array, index, value));
                 break;
             }
+            case Code.Ldelem_R4:
+            case Code.Ldelem_R8:
+            case Code.Ldelem_U1:
+            case Code.Ldelem_U2:
+            case Code.Ldelem_U4:
+            case Code.Ldelem_I:
+            case Code.Ldelem_I1:
+            case Code.Ldelem_I2:
+            case Code.Ldelem_I4:
+            case Code.Ldelem_I8:
+            case Code.Ldelem_Ref: {
+                var index = Expressions.Pop();
+                var array = GetReference(Expressions.Pop());
+                Expressions.Push(new IndexExpression(array, index));
+                break;
+            }
+            case Code.Stelem_R4:
+            case Code.Stelem_R8:
+            case Code.Stelem_I:
+            case Code.Stelem_I1:
+            case Code.Stelem_I2:
+            case Code.Stelem_I4:
+            case Code.Stelem_I8:
+            case Code.Stelem_Ref: {
+                var value = Expressions.Pop();
+                var index = Expressions.Pop();
+                var array = GetReference(Expressions.Pop());
+                Statements.Add(new ArrayAssignmentStatement(array, index, value));
+                break;
+            }
+            case Code.Ldelema: {
+                // TODO: Implement Ldelema
+                var index = Expressions.Pop();
+                var array = GetReference(Expressions.Pop());
+                Expressions.Push(new IndexExpression(array, index));
+                break;
+            }
+            case Code.Ldind_I:
+            case Code.Ldind_U1:
+            case Code.Ldind_U2:
+            case Code.Ldind_U4:
+            case Code.Ldind_I1:
+            case Code.Ldind_I2:
+            case Code.Ldind_I4:
+            case Code.Ldind_I8:
+            case Code.Ldind_R4:
+            case Code.Ldind_R8:
+            case Code.Ldind_Ref: {
+                // TODO: Address stuff is completely wrong
+                var reference = GetReference(Expressions.Pop());
+                Expressions.Push(reference);
+                break;
+            }
+            case Code.Stind_I:
+            case Code.Stind_I1:
+            case Code.Stind_I2:
+            case Code.Stind_I4:
+            case Code.Stind_I8:
+            case Code.Stind_R4:
+            case Code.Stind_R8:
+            case Code.Stind_Ref: {
+                var value = Expressions.Pop();
+                var reference = GetReference(Expressions.Pop());
+                Statements.Add(new AssignmentStatement(reference, value));
+                break;
+            }
             case Code.Ret: {
-                if (method.ReturnType.FullName != "System.Void")
+                if (method.ReturnType.FullName != "System.Void" && Expressions.Count > 0)
                     Statements.Add(new ReturnStatement(Expressions.Pop()));
+                else
+                    Statements.Add(new ReturnStatement(new NullExpression()));
                 break;
             }
             case Code.Callvirt:
@@ -411,7 +658,7 @@ public class Compiler
 
                 arguments.Reverse();
                 
-                CallExpression call = new(method, arguments);
+                CallExpression call = new(new MethodExpression(method), arguments);
 
                 if (method.ReturnType.FullName != "System.Void") {
                     string name = $"result_{instruction.Offset}";
@@ -422,36 +669,105 @@ public class Compiler
                 }
                 break;
             }
+            case Code.Calli: {
+                var signature = instruction.GetValue<CallSite>();
+                var arguments = new List<Expression>();
+                for (int i = 0; i < signature.Parameters.Count; i++) {
+                    arguments.Add(Expressions.Pop());
+                }
+
+                arguments.Reverse();
+
+                var function = Expressions.Pop();
+                var lambda = new LambdaExpression(signature, function);
+                Expressions.Push(new CallExpression(lambda, arguments));
+                break;
+            }
             case Code.Newarr: {
                 var type = instruction.GetValue<TypeReference>();
                 var size = Expressions.Pop();
                 Expressions.Push(new ArrayExpression(type, size));
                 break;
             }
+            case Code.Initobj: {
+                var type = instruction.GetValue<TypeReference>();
+                var reference = GetReference(Expressions.Pop());
+                Statements.Add(new AssignmentStatement(reference, new NullExpression()));
+                break;
+            }
             case Code.Newobj: {
                 var ctor = instruction.GetValue<MethodReference>();
                 var arguments = new List<Expression>();
-                for (int i = 0; i < method.Parameters.Count; i++) {
+                for (int i = 0; i < ctor.Parameters.Count; i++) {
                     arguments.Add(Expressions.Pop());
                 }
 
                 arguments.Reverse();
 
-                Expressions.Push(new CallExpression(ctor, arguments));
+                var function = new MethodExpression(ctor);
+                Expressions.Push(new CallExpression(function, arguments));
+                break;
+            }
+            case Code.Ldobj: {
+                // TODO: Ldobj
+                var type = instruction.GetValue<TypeReference>();
+                var reference = GetReference(Expressions.Pop());
+                Expressions.Push(reference);
+                break;
+            }
+            case Code.Stobj: {
+                // TODO: Stobj
+                var type = instruction.GetValue<TypeReference>();
+                var value = Expressions.Pop();
+                var reference = GetReference(Expressions.Pop());
+                Statements.Add(new AssignmentStatement(reference, value));
+                break;
+            }
+            case Code.Castclass: {
+                // TODO: Castclass
+                var type = instruction.GetValue<TypeReference>();
+                var reference = GetReference(Expressions.Pop());
+                Expressions.Push(reference);
+                break;
+            }
+            case Code.Throw: {
+                var exception = Expressions.Pop();
+                Statements.Add(new ThrowStatement(exception));
+                break;
+            }
+            case Code.Rethrow: {
+                // TODO: Rethrow
+                break;
+            }
+            case Code.Sizeof: {
+                var type = instruction.GetValue<TypeReference>();
+                Expressions.Push(new NumberExpression(type.GetSize()));
+                break;
+            }
+            case Code.Refanytype: {
+                // TODO: Refanytype
                 break;
             }
             case Code.Unbox_Any:
+            case Code.Unbox:
             case Code.Box: {
                 // TODO: Do nothing?
                 break;
             }
-            case Code.Constrained: {
+            case Code.Volatile:
+            case Code.Constrained:
+            case Code.Readonly: {
                 // TODO: Do nothing?
                 break;
             }
             case Code.Endfinally:
+            case Code.Leave:
             case Code.Leave_S: {
                 // TODO: Implement exception handling
+                break;
+            }
+            case Code.Switch: {
+                // TODO: Implement switch
                 break;
             }
             default:

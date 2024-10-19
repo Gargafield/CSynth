@@ -22,7 +22,8 @@ public class Module {
         }
 
         if (Definition.EntryPoint != null) {
-            var expression = new CallExpression(Definition.EntryPoint, new List<Expression>());
+            var function = new MethodExpression(Definition.EntryPoint);
+            var expression = new CallExpression(function, new List<Expression>());
             statements.Add(new CallStatement(expression));
         }
 

@@ -21,7 +21,12 @@ public class Program
             var path = args[0];
             var text = File.ReadAllText(path);
             var cfg = CFG.FromEquality(text);
+            Console.WriteLine("Before: ");
+            Console.WriteLine(cfg.ToMermaid());
+
             Restructure.RestructureCFG(cfg);
+            
+            Console.WriteLine("After: ");
             Console.WriteLine(cfg.ToMermaid());
             return;
         }

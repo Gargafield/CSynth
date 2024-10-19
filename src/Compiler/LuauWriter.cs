@@ -170,46 +170,44 @@ public class LuauWriter {
         else {
             baseName = ReplaceBadChars(method.Name);
         }
-                
-        return baseName + '_' + method.Resolve().RVA;
+
+        var methodDef = method.Resolve();   
+        if (methodDef == null)
+            return baseName;
+
+        return baseName + '_' + methodDef.RVA;
     }
 
-
-    private Dictionary<Operator, string> OperatorMap = new() {
-        { Operator.Add, "+" },
-        { Operator.Subtract, "-" },
-        { Operator.Multiply, "*" },
-        { Operator.Divide, "/" },
-        { Operator.Modulo, "%" },
-        { Operator.Equal, "==" },
-        { Operator.NotEqual, "~=" },
-        { Operator.GreaterThan, ">" },
-        { Operator.LessThan, "<" },
-        { Operator.GreaterThanOrEqual, ">=" },
-        { Operator.LessThanOrEqual, "<=" },
-        { Operator.And, "and" },
-        { Operator.Or, "or" }
-    };
+    private string EscapeString(string str) {
+        return str.Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n");
+    }
 
     private string ProcessExpression(Expression expression) {
         switch (expression) {
             case VariableExpression variable:
                 return variable.Name;
             case BinaryExpression binary:
-                return $"{ProcessExpression(binary.Left)} {OperatorMap[binary.Operator]} {ProcessExpression(binary.Right)}";
+                return ProcessBinary(binary);
             case UnaryExpression unary:
                 return $"not {ProcessExpression(unary.Operand)}";
             case NumberExpression number:
                 return number.Value.ToString();
             case StringExpression str:
-                return $"\"{str.Value}\"";
+                return $"\"{EscapeString(str.Value)}\"";
             case ByteArrayExpression byteArray:
                 return "buffer.fromstring(\"" + string.Join("", byteArray.Value.Select(b => $"\\x{b:X2}")) + "\")";
             case NullExpression _:
                 return "nil";
+            case MethodExpression method:
+                return ImportMethod(method.Method);
+            case LambdaExpression lambda:
+                return ProcessExpression(lambda.Function);
+            case VirtualFunctionExpression virtualFunction:
+                return $"{ProcessExpression(virtualFunction.Expression)}.{GetMethodName(virtualFunction.Method)}";
             case CallExpression call: {
                 // TODO: Fix method handle name
-                return $"{ImportMethod(call.Method)}({string.Join(", ", call.Arguments.Select(ProcessExpression))}) -- {call.Method.FullName}";
+                var signature = call.Function.GetMethodSignature();
+                return $"{ProcessExpression(call.Function)}({string.Join(", ", call.Arguments.Select(ProcessExpression))}) -- {signature}";
             }
             case BoolExpression boolean:
                 return boolean.Value ? "true" : "false";
@@ -232,6 +230,41 @@ public class LuauWriter {
             default:
                 throw new NotImplementedException(expression.GetType().Name);
         }
+    }
+
+    private Dictionary<Operator, string> OperatorMap = new() {
+        { Operator.Add, "+" },
+        { Operator.Subtract, "-" },
+        { Operator.Multiply, "*" },
+        { Operator.Divide, "/" },
+        { Operator.Modulo, "%" },
+        { Operator.Equal, "==" },
+        { Operator.NotEqual, "~=" },
+        { Operator.GreaterThan, ">" },
+        { Operator.LessThan, "<" },
+        { Operator.GreaterThanOrEqual, ">=" },
+        { Operator.LessThanOrEqual, "<=" },
+        { Operator.And, "and" },
+        { Operator.Or, "or" }
+    };
+
+    private Dictionary<Operator, string> BitwiseMap = new() {
+        { Operator.BitwiseNot, "bnot" },
+        { Operator.BitwiseAnd, "band" },
+        { Operator.BitwiseOr, "bor" },
+        { Operator.BitwiseXor, "bxor" },
+        { Operator.RightShift, "rshift" },
+        { Operator.LeftShift, "lshift" }
+    };
+
+    private string ProcessBinary(BinaryExpression binary) {
+        if (BitwiseMap.ContainsKey(binary.Operator)) {
+            var method = BitwiseMap[binary.Operator];
+            return $"bit32.{method}({ProcessExpression(binary.Left)}, {ProcessExpression(binary.Right)})";
+        }
+
+        var op = OperatorMap[binary.Operator];
+        return $"{ProcessExpression(binary.Left)} {op} {ProcessExpression(binary.Right)}";
     }
 
     private string GetImportPath(TypeReference type) {

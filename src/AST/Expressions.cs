@@ -20,7 +20,13 @@ public enum Operator {
     LessThan,
     LessThanOrEqual,
     And,
-    Or
+    Or,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    BitwiseNot,
+    RightShift,
+    LeftShift,
 }
 
 public class BinaryExpression : Expression
@@ -137,14 +143,74 @@ public class NullExpression : Expression
     public override string ToString() => "null";
 }
 
-public class CallExpression : Expression
+public abstract class FunctionExpression : Expression
 {
-    public MethodReference Method { get; set; }
-    public List<Expression> Arguments { get; set; }
+    public abstract IMethodSignature GetMethodSignature();
+}
 
-    public CallExpression(MethodReference method, List<Expression> arguments)
+public class MethodExpression : FunctionExpression {
+    public MethodReference Method { get; set; }
+
+    public MethodExpression(MethodReference method)
     {
         Method = method;
+    }
+
+    public override IMethodSignature GetMethodSignature() => Method;
+
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitMethodExpression(this);
+    }
+
+    public override string ToString() => Method.Name;
+}
+
+public class LambdaExpression : FunctionExpression {
+    public CallSite Signature { get; set; }
+    public Expression Function { get; set; }
+
+    public LambdaExpression(CallSite signature, Expression function)
+    {
+        Signature = signature;
+        Function = function;
+    }
+
+    public override IMethodSignature GetMethodSignature() => Signature;
+
+    public override void Accept(ExpressionVisitor visitor) {
+        if (!visitor.VisitLambdaExpression(this)) return;
+        Function.Accept(visitor);
+    }
+
+    public override string ToString() => $"{Function}";
+}
+
+public class VirtualFunctionExpression : FunctionExpression {
+    public Expression Expression { get; set; }
+    public MethodReference Method { get; set; }
+
+    public VirtualFunctionExpression(Expression expression, MethodReference method)
+    {
+        Expression = expression;
+        Method = method;
+    }
+
+    public override IMethodSignature GetMethodSignature() => Method;
+
+    public override void Accept(ExpressionVisitor visitor) {
+        visitor.VisitVirtualFunctionExpression(this);
+    }
+
+    public override string ToString() => $"{Expression}.{Method.Name}";
+}
+
+public class CallExpression : Expression {
+    public FunctionExpression Function { get; set; }
+    public List<Expression> Arguments { get; set; }
+
+    public CallExpression(FunctionExpression function, List<Expression> arguments)
+    {
+        Function = function;
         Arguments = arguments;
     }
 
@@ -155,7 +221,7 @@ public class CallExpression : Expression
         }
     }
 
-    public override string ToString() => $"{Method.Name}({string.Join(", ", Arguments)})";
+    public override string ToString() => $"{Function}({string.Join(", ", Arguments)})";
 }
 
 public abstract class Reference : Expression {

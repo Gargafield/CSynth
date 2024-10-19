@@ -39,11 +39,16 @@ public static class CecilExtensions {
             case Code.Ldarg_2:
             case Code.Ldarg_3:
                 int index = (int)(instruction.OpCode.Code - Code.Ldarg_0);
+                if (method.HasThis || method.IsConstructor) {
+                    index--;
+                }
+
+                if (index < 0) {
+                    return new ParameterDefinition("this", ParameterAttributes.None, method.DeclaringType);
+                }
+
                 if (index < method.Parameters.Count) {
                     return method.Parameters[index];
-                }
-                if (method.IsConstructor && index == 0) {
-                    return new ParameterDefinition("this", ParameterAttributes.None, method.DeclaringType);
                 }
 
                 throw new NotSupportedException($"Method {method.Name} does not have {index} parameters");
@@ -83,5 +88,51 @@ public static class CecilExtensions {
         }
 
         throw new NotSupportedException($"Unsupported instruction: {instruction}");
+    }
+
+    public static int GetSize(this TypeReference type) {
+        if (type.IsPrimitive) {
+            switch (type.MetadataType) {
+                case MetadataType.Boolean:
+                case MetadataType.Byte:
+                case MetadataType.SByte:
+                    return 1;
+                case MetadataType.Int16:
+                case MetadataType.UInt16:
+                    return 2;
+                case MetadataType.Int32:
+                case MetadataType.UInt32:
+                case MetadataType.Single:
+                    return 4;
+                case MetadataType.Int64:
+                case MetadataType.UInt64:
+                case MetadataType.Double:
+                    return 8;
+            }
+        }
+
+        if (type.IsPointer || type.IsFunctionPointer) {
+            return 4;
+        }
+
+        if (type.IsValueType) {
+            int size = 0;
+            foreach (var field in type.Resolve().Fields) {
+                if (field.IsStatic)
+                    continue;
+                if (field.FieldType == type)
+                    continue; // Avoid infinite recursion
+                size += GetSize(field.FieldType);
+            }
+
+            return Math.Max(1, size);
+        }
+
+        if (type.IsGenericParameter) {
+            // TODO: Is this even remotely correct?
+            return 4;
+        }
+
+        throw new NotSupportedException($"Unsupported type: {type}");
     }
 }
