@@ -70,6 +70,7 @@ public class FlowInfo
                     chunkTargets.Add(pairIndexOf(instructions.IndexOf((Instruction)last.Operand)));
                     chunkTargets.Add(i + 1);
                     break;
+                case FlowControl.Throw:
                 case FlowControl.Return:
                     chunkTargets.Add(-1);
                     break;
