@@ -31,13 +31,16 @@ public class ControlTree {
             var currentId = stack.Pop();
             var current = cfg.Blocks[currentId];
 
-            if (!blocks.Contains(currentId) || visited.Contains(currentId)) {
+            // This block is the head of a loop
+            var loop = cfg.Regions.OfType<LoopRegion>().FirstOrDefault(r => r.Header == current);
+
+            if (!blocks.Contains(currentId)
+            || visited.Contains(currentId)
+            || (!cfg.Blocks.Predecessors(currentId).All(visited.Contains) && loop == null)) {
                 continue;
             }
             visited.Add(currentId);
 
-            // This block is the head of a loop
-            var loop = cfg.Regions.OfType<LoopRegion>().FirstOrDefault(r => r.Header == current);
             if (loop != null) {
                 this.stack.Push(new LoopStructure());
             }
@@ -73,6 +76,9 @@ public class ControlTree {
             loop = cfg.Regions.OfType<LoopRegion>().FirstOrDefault(r => r.Control == current);
             if (loop != null) {
                 var loopStruct = this.stack.Pop();
+                if (loopStruct is not LoopStructure)
+                    throw new InvalidOperationException("Expected loop structure");
+                
                 Structure.Children.Add(loopStruct);
             }
         }
