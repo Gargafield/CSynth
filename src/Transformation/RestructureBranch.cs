@@ -18,6 +18,7 @@ public class RestructureBranch
 
     private int branch = default!;
     private HashSet<int> set = new();
+    private HashSet<int> visited = new();
 
     private RestructureBranch(CFG cfg) {
         this.cfg = cfg;
@@ -36,6 +37,8 @@ public class RestructureBranch
 
         while (stack.Count > 0) {
             var head = stack.Pop();
+            if (!restructure.visited.Add(head))
+                continue;
 
             var branch = restructure.FindBranch(head);
             if (branch == null)
@@ -55,7 +58,9 @@ public class RestructureBranch
         var regions = regionsArray.AsSpan(0, numRegions);
 
         int exit;
-        if (continuations.Count > 1)
+        if (continuations.Count == 0)
+            return;
+        else if (continuations.Count > 1)
             exit = ConstructSingleExit(regions, continuations.ToList());
         else
             exit = continuations.First();

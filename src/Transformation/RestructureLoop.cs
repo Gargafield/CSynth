@@ -1,5 +1,4 @@
-﻿
-using CSynth.AST;
+﻿using CSynth.AST;
 
 namespace CSynth.Transformation;
 
@@ -8,6 +7,7 @@ public class RestructureLoop
     private CFG cfg;
     private BlockCollection blocks;
     private RegionCollection regions;
+    private SCC scc = default!;
 
     private List<int> loop = default!;
 
@@ -15,13 +15,13 @@ public class RestructureLoop
         this.cfg = cfg;
         blocks = cfg.Blocks;
         regions = cfg.Regions;
+        scc = new(blocks);
     }
+
 
     public static List<int> Restructure(CFG cfg) {
 
         var restructure = new RestructureLoop(cfg);
-
-        var sccs = SCC.ComputeSCC(cfg.Blocks);
 
         /*
               │ ╭───╮  
@@ -34,15 +34,22 @@ public class RestructureLoop
               │ │ 3 ├─╯
               │ ╰───╯
         */
-        var loops = sccs.Where(scc => scc.Count > 1 || cfg.Blocks.Successors(scc[0]).Contains(scc[0])).ToList();
         var regions = new List<int>();
+        restructure.scc.FindSCCs(restructure.blocks.GetEnumerableIds());
+        
+        while (restructure.scc.Count > 0) {
+            var scc = restructure.scc.Pop();
 
-        foreach (var loop in loops) {
-            restructure.loop = loop;
+            if (scc.Count <= 1 && !cfg.Blocks.Successors(scc[0]).Contains(scc[0])) {
+                continue;
+            }
+
+            restructure.loop = scc;
             var (header, control) = restructure.RestructureSingle();
-            regions.Add(
-                restructure.regions.AddLoopRegion(loop, header, control)
-            );
+            var region = restructure.regions.AddLoopRegion(scc, header, control);
+            regions.Add(region);
+
+            restructure.scc.FindSCCs(scc.Except(new[] { header }));
         }
 
         return regions;
@@ -96,6 +103,10 @@ public class RestructureLoop
             }
 
             exits.AddRange(blocks.Successors(block).Except(loop));
+        }
+
+        if (exits.Count == 0 && entries.Count > 0) {
+            exits.Add(entries[0]);
         }
 
         return Tuple.Create(entries, exits.Distinct().ToList());
@@ -190,7 +201,7 @@ public class RestructureLoop
 
             foreach (var predecessors in blocks.Predecessors(block).Intersect(loop).ToArray()) {
 
-                var assignment = blocks.AddAssignment(exitVariable, counter);
+                var assignment = blocks.AddAssignment(exitVariable, counter++);
                 blocks.AddEdge(assignment, exit);
 
                 blocks.ReplaceEdge(predecessors, block, assignment);
