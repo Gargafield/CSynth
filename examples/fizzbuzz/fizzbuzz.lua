@@ -1,7 +1,7 @@
 local Object = require("@System/Object")
 local Console = require("@System/Console")
-local Module = {}
-local FizzBuzz = {}
+Module = {}
+FizzBuzz = {}
 function FizzBuzz.Main_8272()
     local local_0
     local_0 = 1
@@ -26,9 +26,11 @@ function FizzBuzz.Main_8272()
             LoopControl = 0
         end
     until LoopControl == 0
+    return nil
 end
 function FizzBuzz.new_8356(this)
     Object.new_6830880(this) -- System.Void System.Object::.ctor()
+    return nil
 end
 FizzBuzz.Main_8272() -- System.Void FizzBuzz::Main()
 

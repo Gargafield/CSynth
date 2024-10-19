@@ -1,7 +1,7 @@
 local Object = require("@System/Object")
 local Console = require("@System/Console")
-local Module = {}
-local MultiplicationTable = {}
+Module = {}
+MultiplicationTable = {}
 function MultiplicationTable.PrintTable_8272(num)
     local local_0, local_1
     local_0 = 1
@@ -15,6 +15,7 @@ function MultiplicationTable.PrintTable_8272(num)
             LoopControl = 0
         end
     until LoopControl == 0
+    return nil
 end
 function MultiplicationTable.Main_8332()
     local local_0, local_1, local_2
@@ -39,9 +40,11 @@ function MultiplicationTable.Main_8332()
             LoopControl = 0
         end
     until LoopControl == 0
+    return nil
 end
 function MultiplicationTable.new_8423(this)
     Object.new_6830880(this) -- System.Void System.Object::.ctor()
+    return nil
 end
 MultiplicationTable.Main_8332() -- System.Void MultiplicationTable::Main()
 

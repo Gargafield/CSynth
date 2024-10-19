@@ -1,7 +1,7 @@
 local Object = require("@System/Object")
 local Console = require("@System/Console")
-local Module = {}
-local Fibonacci = {}
+Module = {}
+Fibonacci = {}
 function Fibonacci.Main_8272()
     local local_0, local_1, local_2, local_3
     local_0 = 50
@@ -28,9 +28,11 @@ function Fibonacci.Main_8272()
             LoopControl = 0
         end
     until LoopControl == 0
+    return nil
 end
 function Fibonacci.new_8349(this)
     Object.new_6830880(this) -- System.Void System.Object::.ctor()
+    return nil
 end
 Fibonacci.Main_8272() -- System.Void Fibonacci::Main()
 

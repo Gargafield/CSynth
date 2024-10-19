@@ -3,8 +3,8 @@ local Int32 = require("@System/Int32")
 local String = require("@System/String")
 local Console = require("@System/Console")
 local List1 = require("@System/Collections/Generic/List1")
-local Module = {}
-local Program = {}
+Module = {}
+Program = {}
 function Program.Main_8272()
     local local_0, local_3, local_1, local_4, local_5, local_2
     local_0 = List1.new_8323580() -- System.Void System.Collections.Generic.List`1<System.Int32>::.ctor()
@@ -38,9 +38,11 @@ function Program.Main_8272()
     result_103 = List1.get_Count_8323924(local_0) -- System.Int32 System.Collections.Generic.List`1<System.Int32>::get_Count()
     local_2 = local_1 / result_103
     Console.WriteLine_72312("Average: {0}", local_2) -- System.Void System.Console::WriteLine(System.String,System.Object)
+    return nil
 end
 function Program.new_8428(this)
     Object.new_6830880(this) -- System.Void System.Object::.ctor()
+    return nil
 end
 Program.Main_8272() -- System.Void Program::Main()
 

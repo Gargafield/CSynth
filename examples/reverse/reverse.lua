@@ -33,9 +33,11 @@ function Program.Main_8272()
             LoopControl = 0
         end
     until LoopControl == 0
+    return nil
 end
 function Program.new_8363(this)
     Object.new_6830880(this) -- System.Void System.Object::.ctor()
+    return nil
 end
 PrivateImplementationDetails = {}
 PrivateImplementationDetails[10344] = buffer.fromstring("\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00\x09\x00\x00\x00\x0A\x00\x00\x00")
