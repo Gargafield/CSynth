@@ -79,6 +79,7 @@ public class RestructureBranch
 
         var variable = BranchVariable.BranchControl;
         var control = blocks.AddBranch(variable);
+        set.Add(control);
         
         for (int i = 0; i < continuations.Count; i++) {
             blocks.AddEdge(control, continuations[i]);
@@ -90,6 +91,8 @@ public class RestructureBranch
             int target = control;
             if (exits.Length > 1) {
                 target = blocks.AddNoop();
+                set.Add(target);
+
                 blocks.AddEdge(target, control);
                 region.Blocks.Add(target);
             }
@@ -99,6 +102,8 @@ public class RestructureBranch
 
                 foreach (var exit in blocks.Predecessors(continuation).Intersect(exits).ToArray()) {
                     var assigment = blocks.AddAssignment(variable, i);
+                    set.Add(assigment);
+
                     blocks.AddEdge(assigment, target);
                     blocks.ReplaceEdge(exit, continuation, assigment);
 
@@ -123,6 +128,8 @@ public class RestructureBranch
             if (this.blocks.Predecessors(successor).Count > 1) {
                 // Empty branch region, construct noop
                 var noop = this.blocks.AddNoop();
+                set.Add(noop);
+
                 this.blocks.AddEdge(noop, successor);
                 this.blocks.ReplaceEdge(branch, successor, noop);
 
