@@ -71,8 +71,11 @@ public class FlowInfo
                     chunkTargets.Add(i + 1);
                     break;
                 case FlowControl.Throw:
+                    chunkTargets.Add(-1);
+                    break;
                 case FlowControl.Return:
                     chunkTargets.Add(-1);
+                    chunkInstructions.RemoveAt(chunkInstructions.Count - 1);
                     break;
                 default:
                     chunkTargets.Add(pairIndexOf(end + 1));

@@ -175,8 +175,11 @@ public class Compiler
                 Expressions.Push(new VariableExpression(branch.Variable));
                 break;
             }
-            case EntryBlock:
             case ExitBlock:
+                var expression = Expressions.Count > 0 ? Expressions.Pop() : new NullExpression();
+                Statements.Add(new ReturnStatement(expression));
+                break;
+            case EntryBlock:
             case NoopBlock:
                 break;
             default:
