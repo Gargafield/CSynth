@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
   </ItemGroup>
@@ -21,12 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Analysis\CSynth.Analysis.csproj" />
-    <ProjectReference Include=".\IL\IL.ilproj" />
+    <ProjectReference Include=".\..\..\src\AST\CSynth.AST.csproj" />
+    <ProjectReference Include=".\..\..\src\Compiler\CSynth.Compiler.csproj" />
+
+    <ProjectReference Include=".\Tests\ILConformance.ilproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Remove Example.cs from compile -->
-    <Compile Remove="*.il" />
+    <Compile Remove="Tests/*.il" />
   </ItemGroup>
 </Project>
