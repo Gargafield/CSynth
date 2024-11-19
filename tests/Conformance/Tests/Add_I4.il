@@ -28,6 +28,10 @@
         .method public static int32 Main() {
             .entrypoint
             .locals init (int32)
+
+            ldc.i4 1
+            stloc 0
+
         TEST1:
             ldc.i4 0x80000000
             ldc.i4 0x80000000
@@ -532,7 +536,7 @@
 
         FAIL:
             ldstr "Add_I4.il failed at test number: {0}"
-            ldc.i4.0
+            ldloc 0
             call void [mscorlib]System.Console::WriteLine(string, object)
             
             ldc.i4 0
