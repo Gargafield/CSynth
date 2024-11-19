@@ -18,6 +18,7 @@ public class Compiler
     public Stack<Scope> Scopes { get; } = new();
     public List<Statement> Statements => Scopes.Peek().Statements;
     public Stack<Expression> Expressions => Scopes.Peek().Expressions;
+    public Dictionary<string, TypeReference> Types { get; } = new();
     public HashSet<string> Locals { get; } = new();
 
     private Compiler(ControlTree tree, MethodDefinition method) {

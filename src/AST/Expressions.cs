@@ -4,6 +4,7 @@ namespace CSynth.AST;
 
 public abstract class Expression
 {
+    public virtual TypeReference Type { get; set; } = null!;
     public abstract void Accept(ExpressionVisitor visitor);
 }
 
@@ -35,11 +36,12 @@ public class BinaryExpression : Expression
     public Expression Right { get; set; }
     public Operator Operator { get; set; }
 
-    public BinaryExpression(Expression left, Expression right, Operator op)
+    public BinaryExpression(Expression left, Expression right, Operator op, TypeReference type)
     {
         Left = left;
         Right = right;
         Operator = op;
+        Type = type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -55,9 +57,10 @@ public class UnaryExpression : Expression
 {
     public Expression Operand { get; set; }
 
-    public UnaryExpression(Expression operand)
+    public UnaryExpression(Expression operand, TypeReference type)
     {
         Operand = operand;
+        Type = type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -78,6 +81,7 @@ public class BoolExpression : Expression
     private BoolExpression(bool value)
     {
         Value = value;
+        Type = TypeResolver.BoolType;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -89,9 +93,9 @@ public class BoolExpression : Expression
 
 public class NumberExpression : Expression
 {
-    public double Value { get; set; }
+    public object Value { get; set; }
 
-    public NumberExpression(double value)
+    public NumberExpression(object value, TypeReference type)
     {
         Value = value;
     }
@@ -100,7 +104,7 @@ public class NumberExpression : Expression
         visitor.VisitNumberExpression(this);
     }
 
-    public override string ToString() => Value.ToString();
+    public override string ToString() => Value.ToString()!;
 }
 
 public class StringExpression : Expression
@@ -110,6 +114,7 @@ public class StringExpression : Expression
     public StringExpression(string value)
     {
         Value = value;
+        Type = TypeResolver.StringType;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -120,11 +125,13 @@ public class StringExpression : Expression
 }
 
 public class ByteArrayExpression : Expression {
+    private static TypeReference _type = TypeResolver.GetTypeReference<byte[]>();
     public byte[] Value { get; set; }
 
     public ByteArrayExpression(byte[] value)
     {
         Value = value;
+        Type = _type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -136,6 +143,11 @@ public class ByteArrayExpression : Expression {
 
 public class NullExpression : Expression
 {
+    public NullExpression()
+    {
+        Type = TypeResolver.ObjectType;
+    }
+
     public override void Accept(ExpressionVisitor visitor) {
         visitor.VisitNullExpression(this);
     }
@@ -154,6 +166,7 @@ public class MethodExpression : FunctionExpression {
     public MethodExpression(MethodReference method)
     {
         Method = method;
+        Type = method.ReturnType;
     }
 
     public override IMethodSignature GetMethodSignature() => Method;
@@ -173,6 +186,7 @@ public class LambdaExpression : FunctionExpression {
     {
         Signature = signature;
         Function = function;
+        Type = signature.ReturnType;
     }
 
     public override IMethodSignature GetMethodSignature() => Signature;
@@ -193,6 +207,7 @@ public class VirtualFunctionExpression : FunctionExpression {
     {
         Expression = expression;
         Method = method;
+        Type = method.ReturnType;
     }
 
     public override IMethodSignature GetMethodSignature() => Method;
@@ -212,6 +227,7 @@ public class CallExpression : Expression {
     {
         Function = function;
         Arguments = arguments;
+        Type = function.Type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -231,8 +247,9 @@ public abstract class Reference : Expression {
 
 public class VariableExpression : Reference
 {
-    public VariableExpression(string name) {
+    public VariableExpression(string name, TypeReference type) {
         Name = name;
+        Type = type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -252,6 +269,7 @@ public class FieldExpression : Reference
     {
         Name = field;
         Value = value;
+        Type = value.Type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -276,6 +294,7 @@ public class IndexExpression : Reference
     {
         Value = value;
         Index = index;
+        Type = value.Type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -294,8 +313,6 @@ public class IndexExpression : Reference
 
 public class CreateObjectExpression : Expression
 {
-    public TypeReference Type { get; set; }
-
     public CreateObjectExpression(TypeReference type)
     {
         Type = type;
@@ -310,8 +327,6 @@ public class CreateObjectExpression : Expression
 
 public class TypeExpression : Reference
 {
-    public TypeReference Type { get; set; }
-
     public TypeExpression(TypeReference type)
     {
         Type = type;
@@ -326,6 +341,9 @@ public class TypeExpression : Reference
 }
 
 public class SelfExpression : Reference {
+    public SelfExpression(TypeReference type) {
+        Type = type;
+    }
 
     public override void Accept(ExpressionVisitor visitor) {
         visitor.VisitSelfExpression(this);
@@ -341,6 +359,7 @@ public class ParameterExpression : Reference {
     public ParameterExpression(ParameterDefinition parameter)
     {
         Parameter = parameter;
+        Type = parameter.ParameterType;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -353,13 +372,11 @@ public class ParameterExpression : Reference {
 
 public class ArrayExpression : Expression
 {
-    public TypeReference Type { get; set; }
     public Expression Size { get; set; }
 
-    public ArrayExpression(TypeReference type, Expression size)
-    {
-        Type = type;
+    public ArrayExpression(TypeReference type, Expression size) {
         Size = size;
+        Type = type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
@@ -373,9 +390,9 @@ public class ArrayExpression : Expression
 public class LengthExpression : Expression {
     public Reference Value { get; set; }
 
-    public LengthExpression(Reference value)
-    {
+    public LengthExpression(Reference value) {
         Value = value;
+        Type = TypeResolver.Int32Type;
     }
 
     public override void Accept(ExpressionVisitor visitor) {
