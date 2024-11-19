@@ -191,7 +191,7 @@ public class LuauWriter {
             case UnaryExpression unary:
                 return $"not {ProcessExpression(unary.Operand)}";
             case NumberExpression number:
-                return number.Value.ToString();
+                return FormatNumber(number);
             case StringExpression str:
                 return $"\"{EscapeString(str.Value)}\"";
             case ByteArrayExpression byteArray:
@@ -265,6 +265,19 @@ public class LuauWriter {
 
         var op = OperatorMap[binary.Operator];
         return $"{ProcessExpression(binary.Left)} {op} {ProcessExpression(binary.Right)}";
+    }
+
+    private string FormatNumber(NumberExpression number) {
+        switch (number.Value) {
+            case int:
+            case long:
+                return $"0x{number.Value:X}";
+            case float:
+            case double:
+                return number.Value.ToString()!;
+            default:
+                throw new NotImplementedException();
+        }
     }
 
     private string GetImportPath(TypeReference type) {

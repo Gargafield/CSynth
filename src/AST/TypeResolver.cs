@@ -6,6 +6,8 @@ public static class TypeResolver {
 
     public static TypeReference BoolType => _assembly.MainModule.ImportReference(typeof(bool));
     public static TypeReference Int32Type => _assembly.MainModule.ImportReference(typeof(int));
+    public static TypeReference Int64Type => _assembly.MainModule.ImportReference(typeof(long));
+    public static TypeReference FloatType => _assembly.MainModule.ImportReference(typeof(float));
     public static TypeReference DoubleType => _assembly.MainModule.ImportReference(typeof(double));
     public static TypeReference StringType => _assembly.MainModule.ImportReference(typeof(string));
     public static TypeReference VoidType => _assembly.MainModule.ImportReference(typeof(void));

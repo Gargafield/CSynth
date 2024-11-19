@@ -129,7 +129,7 @@ public class AssignmentBlock : SyntheticBlock {
     }
 
     public void AddVariable(string name, int value) {
-        Instructions.Add(new KeyValuePair<string, Expression>(name, new NumberExpression(value)));
+        Instructions.Add(new KeyValuePair<string, Expression>(name, new NumberExpression(value, TypeResolver.Int32Type)));
     }
 
     public void AddVariable(string name, bool value) {

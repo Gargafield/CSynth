@@ -18,7 +18,7 @@ public class Compiler
     public Stack<Scope> Scopes { get; } = new();
     public List<Statement> Statements => Scopes.Peek().Statements;
     public Stack<Expression> Expressions => Scopes.Peek().Expressions;
-    public Dictionary<string, TypeReference> Types { get; } = new();
+    public Dictionary<string, TypeReference> Variables { get; } = new();
     public HashSet<string> Locals { get; } = new();
 
     private Compiler(ControlTree tree, MethodDefinition method) {
@@ -86,8 +86,10 @@ public class Compiler
         var block = loop.Children.Last() as Block;
 
         Expression? condition = null;
-        if (block is BranchBlock branch)
-            condition = new VariableExpression(branch!.Variable);
+        if (block is BranchBlock branch) {
+            Variables.Add(branch.Variable, TypeResolver.BoolType);
+            condition = new VariableExpression(branch!.Variable, TypeResolver.BoolType);
+        }
         else
             condition = body.Expressions.Pop();
 
@@ -135,14 +137,15 @@ public class Compiler
     }
 
     private void FixExpressionOverflows(IEnumerable<Scope> scopes) {
-        var expressionOverflow = scopes.Max(s => s.Expressions.Count) - Expressions.Count;
-        if (expressionOverflow == 0)
+        var expressionOverflow = scopes.MaxBy(s => s.Expressions.Count)?.Expressions;
+        if (expressionOverflow == null || expressionOverflow.Count == 0)
             return;
 
-        for (int i = 0; i < expressionOverflow; i++) {
+        for (int i = 0; i < expressionOverflow.Count; i++) {
             var name = $"overflow_{i}";
             Statements.Add(new AssignmentStatement(name, new NullExpression()));
-            Expressions.Push(new VariableExpression(name));
+            Expressions.Push(new VariableExpression(name, expressionOverflow.ElementAt(i).Type));
+            Variables.Add(name, expressionOverflow.ElementAt(i).Type);
         }
 
         foreach (var scope in scopes) {
@@ -173,7 +176,8 @@ public class Compiler
                 }
                 break;
             case BranchBlock branch: {
-                Expressions.Push(new VariableExpression(branch.Variable));
+                Expressions.Push(new VariableExpression(branch.Variable, TypeResolver.BoolType));
+                Variables.Add(branch.Variable, TypeResolver.BoolType);
                 break;
             }
             case ExitBlock:
@@ -206,22 +210,22 @@ public class Compiler
             case Code.Ldc_I4_S:
             case Code.Ldc_I4: {
                 int value = instruction.GetInt();
-                Expressions.Push(new NumberExpression(value));
+                Expressions.Push(new NumberExpression(value, TypeResolver.Int32Type));
                 break;
             }
             case Code.Ldc_I8: {
                 long value = instruction.GetValue<long>();
-                Expressions.Push(new NumberExpression(value));
+                Expressions.Push(new NumberExpression(value, TypeResolver.Int64Type));
                 break;
             }
             case Code.Ldc_R4: {
                 float value = instruction.GetValue<float>();
-                Expressions.Push(new NumberExpression(value));
+                Expressions.Push(new NumberExpression(value, TypeResolver.FloatType));
                 break;
             }
             case Code.Ldc_R8: {
                 double value = instruction.GetValue<double>();
-                Expressions.Push(new NumberExpression(value));
+                Expressions.Push(new NumberExpression(value, TypeResolver.DoubleType));
                 break;
             }
             case Code.Ldstr: {
@@ -237,8 +241,8 @@ public class Compiler
             case Code.Ldloc_S: {
                 VariableDefinition variable = instruction.GetVariable(method.Body);
                 string name = $"local_{variable.Index}";
-                Locals.Add(name);
-                Expressions.Push(new VariableExpression(name));
+                Expressions.Push(new VariableExpression(name, variable.VariableType));
+                Variables.Add(name, variable.VariableType);
                 break;
             }
             case Code.Ldarg_0:
@@ -248,7 +252,7 @@ public class Compiler
             case Code.Ldarg:
             case Code.Ldarg_S: {
                 ParameterDefinition parameter = instruction.GetParameter(method);
-                Expressions.Push(new VariableExpression(parameter.Name));
+                Expressions.Push(new VariableExpression(parameter.Name, parameter.ParameterType));
                 break;
             }
             case Code.Starg:
@@ -261,9 +265,9 @@ public class Compiler
                 break;
             }
             case Code.Ldarga:
-            case Code.Ldarga_S: {
+            case Code.Ldarga_S: { // TODO: This is wrong
                 ParameterDefinition parameter = instruction.GetParameter(method);
-                Expressions.Push(new VariableExpression(parameter.Name));
+                Expressions.Push(new VariableExpression(parameter.Name, parameter.ParameterType));
                 break;
             }
             case Code.Stloc_0:
@@ -284,23 +288,24 @@ public class Compiler
                 // TODO: Is this correct? Can we do this?
                 VariableDefinition variable = instruction.GetVariable(method.Body);
                 string name = $"local_{variable.Index}";
-                Expressions.Push(new VariableExpression(name));
+                Expressions.Push(new VariableExpression(name, variable.VariableType));
+                Variables.Add(name, variable.VariableType);
                 break;
             }
             case Code.Ldsflda: {
                 FieldReference field = instruction.GetValue<FieldReference>();
-                Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA)));
+                Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA, TypeResolver.Int32Type)));
                 break;
             }
             case Code.Ldsfld: {
                 FieldReference field = instruction.GetValue<FieldReference>();
-                Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA)));
+                Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA, TypeResolver.Int32Type)));
                 break;
             }
             case Code.Stsfld: {
                 FieldReference field = instruction.GetValue<FieldReference>();
                 var value = Expressions.Pop();
-                Statements.Add(new AssignmentStatement(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA)), value));
+                Statements.Add(new AssignmentStatement(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.Resolve().RVA, TypeResolver.Int32Type)), value));
                 break;
             }
             case Code.Ldflda: {
@@ -333,7 +338,7 @@ public class Compiler
                 
                 switch (token) {
                     case FieldDefinition field:
-                        Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.RVA)));
+                        Expressions.Push(new IndexExpression(new TypeExpression(field.DeclaringType), new NumberExpression(field.RVA, TypeResolver.Int32Type)));
                         break;
                     case TypeDefinition type:
                         Expressions.Push(new TypeExpression(type));
@@ -409,14 +414,20 @@ public class Compiler
                     Code.Shl => Operator.LeftShift,
                     _ => throw new NotImplementedException()
                 };
-                Expressions.Push(new BinaryExpression(left, right, op));
+
+                // TODO: Generate specaialized expressions for types
+                if (left.Type != right.Type) {
+                    throw new NotImplementedException("Type mismatch");
+                }
+
+                Expressions.Push(new BinaryExpression(left, right, op, left.Type));
                 break;
             }
             case Code.Not:
             case Code.Neg: {
                 // TODO: Not and neg
                 var value = Expressions.Pop();
-                Expressions.Push(new UnaryExpression(value));
+                Expressions.Push(new UnaryExpression(value, value.Type));
                 break;
             }
             case Code.Dup: {
@@ -486,7 +497,7 @@ public class Compiler
                     Code.Clt_Un => Operator.LessThan,
                     _ => throw new NotImplementedException()
                 };
-                Expressions.Push(new BinaryExpression(left, right, op));
+                Expressions.Push(new BinaryExpression(left, right, op, TypeResolver.BoolType));
                 break;
             }
             case Code.Br:
@@ -496,13 +507,13 @@ public class Compiler
             case Code.Brfalse:
             case Code.Brfalse_S: {
                 Expression condition = Expressions.Pop();
-                Expressions.Push(new UnaryExpression(condition));
+                Expressions.Push(new UnaryExpression(condition, TypeResolver.BoolType));
                 break;
             }
             case Code.Brtrue:
             case Code.Brtrue_S: {
                 Expression condition = Expressions.Pop();
-                Expressions.Push(new BinaryExpression(condition, new NumberExpression(0), Operator.NotEqual));
+                Expressions.Push(new BinaryExpression(condition, new NumberExpression(0, TypeResolver.Int32Type), Operator.NotEqual, TypeResolver.BoolType));
                 break;
             }
             case Code.Beq:
@@ -551,7 +562,7 @@ public class Compiler
                     Code.Blt_Un_S => Operator.LessThan,
                     _ => throw new NotImplementedException()
                 };
-                Expressions.Push(new BinaryExpression(left, right, op));
+                Expressions.Push(new BinaryExpression(left, right, op, TypeResolver.BoolType));
                 break;
             }
             case Code.Isinst: {
@@ -667,7 +678,8 @@ public class Compiler
                 if (method.ReturnType.FullName != "System.Void") {
                     string name = $"result_{instruction.Offset}";
                     Statements.Add(new AssignmentStatement(name, call));
-                    Expressions.Push(new VariableExpression(name));
+                    Expressions.Push(new VariableExpression(name, method.ReturnType));
+                    Variables.Add(name, method.ReturnType);
                 } else {
                     Statements.Add(new CallStatement(call));
                 }
@@ -745,7 +757,7 @@ public class Compiler
             }
             case Code.Sizeof: {
                 var type = instruction.GetValue<TypeReference>();
-                Expressions.Push(new NumberExpression(type.GetSize()));
+                Expressions.Push(new NumberExpression(type.GetSize(), TypeResolver.Int32Type));
                 break;
             }
             case Code.Refanytype: {
@@ -786,6 +798,7 @@ public class Compiler
 
         var name = $"temp_{Statements.Count}";
         Statements.Add(new AssignmentStatement(name, expression));
-        return new VariableExpression(name);
+        Variables.Add(name, expression.Type);
+        return new VariableExpression(name, expression.Type);
     }
 }
