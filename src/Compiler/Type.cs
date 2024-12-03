@@ -20,7 +20,7 @@ public class Type {
         statements.Add(new TypeDefinitionStatement(Definition));
         
         foreach (var field in Definition.Fields) {
-            var reference = new IndexExpression(new TypeExpression(Definition), new NumberExpression(field.RVA));
+            var reference = new IndexExpression(new TypeExpression(Definition), new NumberExpression(field.RVA, TypeResolver.Int32Type));
             statements.Add(new AssignmentStatement(reference, new ByteArrayExpression(field.InitialValue)));
         }
 

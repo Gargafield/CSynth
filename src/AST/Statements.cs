@@ -10,7 +10,7 @@ public class AssignmentStatement : Statement {
     public Expression Expression { get; set; }
 
     public AssignmentStatement(string variable, Expression expression) {
-        Variable = new VariableExpression(variable);
+        Variable = new VariableExpression(variable, expression.Type);
         Expression = expression;
     }
 
