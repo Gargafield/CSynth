@@ -71,6 +71,5 @@ public static class Runner {
     public static void RunConformance() {
         WriteConformanceTests();
         RunConformanceTests();
-        
     }
 }

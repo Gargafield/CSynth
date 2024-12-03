@@ -5,6 +5,8 @@ using Mono.Cecil;
 namespace CSynth.Compiler;
 
 public class LuauWriter {
+    public const string RuntimePath = "@lib/Runtime";
+
     private List<Statement> statements;
     private ModuleContext context;
 
@@ -12,7 +14,9 @@ public class LuauWriter {
 
     private StringBuilder builder = new();
     private int indent = 0;
+    private bool useRuntime = false;
     private string IndentString => new string(' ', indent * 4);
+
 
     private LuauWriter(List<Statement> statements, ModuleContext context) {
         this.statements = statements;
@@ -33,6 +37,10 @@ public class LuauWriter {
         foreach (var (name, path) in imports) {
             builder.Insert(0, $"local {name} = require(\"{path}\"){Environment.NewLine}");
         }
+
+        if (useRuntime)
+            builder.Insert(0, $"local rt = require(\"{RuntimePath}\"){Environment.NewLine}");
+
         return builder.ToString();
     }
 
@@ -184,20 +192,25 @@ public class LuauWriter {
 
     private string ProcessExpression(Expression expression) {
         switch (expression) {
+            case Syscall syscall:
+                return ProcessExpression(syscall.Emit() ?? syscall.GenerateRuntimeCall());
             case VariableExpression variable:
                 return variable.Name;
             case BinaryExpression binary:
                 return ProcessBinary(binary);
             case UnaryExpression unary:
-                return $"not {ProcessExpression(unary.Operand)}";
+                return $"not ({ProcessExpression(unary.Operand)})";
             case NumberExpression number:
-                return number.Value.ToString();
+                return FormatNumber(number);
             case StringExpression str:
                 return $"\"{EscapeString(str.Value)}\"";
             case ByteArrayExpression byteArray:
                 return "buffer.fromstring(\"" + string.Join("", byteArray.Value.Select(b => $"\\x{b:X2}")) + "\")";
             case NullExpression _:
                 return "nil";
+            case RuntimeMethodExpression runtimeMethod:
+                useRuntime = true;
+                return $"rt.{runtimeMethod.Method}";
             case MethodExpression method:
                 return ImportMethod(method.Method);
             case LambdaExpression lambda:
@@ -265,6 +278,19 @@ public class LuauWriter {
 
         var op = OperatorMap[binary.Operator];
         return $"{ProcessExpression(binary.Left)} {op} {ProcessExpression(binary.Right)}";
+    }
+
+    private string FormatNumber(NumberExpression number) {
+        switch (number.Value) {
+            case int:
+            case long:
+                return $"0x{number.Value:X}";
+            case float:
+            case double:
+                return number.Value.ToString()!;
+            default:
+                throw new NotImplementedException();
+        }
     }
 
     private string GetImportPath(TypeReference type) {
