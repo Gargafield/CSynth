@@ -4,6 +4,7 @@
     "*": true
   },
   "aliases": {
-    "System": "./lib/System/"
+    "System": "./lib/System/",
+    "lib": "./lib/"
   }
 }
