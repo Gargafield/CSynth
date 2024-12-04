@@ -14,12 +14,12 @@
 
 .namespace ILConformance
 {
-    .class public Add_I4_Conformance {
-        .method public static bool Add(int32 a, int32 b, int32 result) cil managed
+    .class public Mul_I4_Conformance {
+        .method public static bool Mul(int32 a, int32 b, int32 result) cil managed
         {
             ldarg.0
             ldarg.1
-            add
+            mul
             ldarg.2
             ceq
             ret
@@ -35,7 +35,7 @@
             ldc.i4 0x80000000
             ldc.i4 0x80000000
             ldc.i4 0x00000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 1
@@ -44,8 +44,8 @@
         TEST1:
             ldc.i4 0x80000000
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x7FFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 2
@@ -54,8 +54,8 @@
         TEST2:
             ldc.i4 0x80000000
             ldc.i4 0x00000000
-            ldc.i4 0x80000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 3
@@ -64,8 +64,8 @@
         TEST3:
             ldc.i4 0x80000000
             ldc.i4 0x00000001
-            ldc.i4 0x80000001
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 4
@@ -74,8 +74,8 @@
         TEST4:
             ldc.i4 0x80000000
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0xFFFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 5
@@ -84,8 +84,8 @@
         TEST5:
             ldc.i4 0x80000000
             ldc.i4 0x55555555
-            ldc.i4 0xD5555555
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 6
@@ -94,8 +94,8 @@
         TEST6:
             ldc.i4 0x80000000
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x2AAAAAAA
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 7
@@ -104,8 +104,8 @@
         TEST7:
             ldc.i4 0xFFFFFFFF
             ldc.i4 0x80000000
-            ldc.i4 0x7FFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 8
@@ -114,8 +114,8 @@
         TEST8:
             ldc.i4 0xFFFFFFFF
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0xFFFFFFFE
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000001
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 9
@@ -124,8 +124,8 @@
         TEST9:
             ldc.i4 0xFFFFFFFF
             ldc.i4 0x00000000
-            ldc.i4 0xFFFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 10
@@ -134,8 +134,8 @@
         TEST10:
             ldc.i4 0xFFFFFFFF
             ldc.i4 0x00000001
-            ldc.i4 0x00000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0xFFFFFFFF
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 11
@@ -144,8 +144,8 @@
         TEST11:
             ldc.i4 0xFFFFFFFF
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x7FFFFFFE
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000001
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 12
@@ -154,8 +154,8 @@
         TEST12:
             ldc.i4 0xFFFFFFFF
             ldc.i4 0x55555555
-            ldc.i4 0x55555554
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0xAAAAAAAB
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 13
@@ -164,8 +164,8 @@
         TEST13:
             ldc.i4 0xFFFFFFFF
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0xAAAAAAA9
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x55555556
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 14
@@ -174,8 +174,8 @@
         TEST14:
             ldc.i4 0x00000000
             ldc.i4 0x80000000
-            ldc.i4 0x80000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 15
@@ -184,8 +184,8 @@
         TEST15:
             ldc.i4 0x00000000
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0xFFFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 16
@@ -195,7 +195,7 @@
             ldc.i4 0x00000000
             ldc.i4 0x00000000
             ldc.i4 0x00000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 17
@@ -204,8 +204,8 @@
         TEST17:
             ldc.i4 0x00000000
             ldc.i4 0x00000001
-            ldc.i4 0x00000001
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 18
@@ -214,8 +214,8 @@
         TEST18:
             ldc.i4 0x00000000
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x7FFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 19
@@ -224,8 +224,8 @@
         TEST19:
             ldc.i4 0x00000000
             ldc.i4 0x55555555
-            ldc.i4 0x55555555
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 20
@@ -234,8 +234,8 @@
         TEST20:
             ldc.i4 0x00000000
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0xAAAAAAAA
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 21
@@ -244,8 +244,8 @@
         TEST21:
             ldc.i4 0x00000001
             ldc.i4 0x80000000
-            ldc.i4 0x80000001
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 22
@@ -254,8 +254,8 @@
         TEST22:
             ldc.i4 0x00000001
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x00000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0xFFFFFFFF
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 23
@@ -264,8 +264,8 @@
         TEST23:
             ldc.i4 0x00000001
             ldc.i4 0x00000000
-            ldc.i4 0x00000001
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 24
@@ -274,8 +274,8 @@
         TEST24:
             ldc.i4 0x00000001
             ldc.i4 0x00000001
-            ldc.i4 0x00000002
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000001
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 25
@@ -284,8 +284,8 @@
         TEST25:
             ldc.i4 0x00000001
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x80000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x7FFFFFFF
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 26
@@ -294,8 +294,8 @@
         TEST26:
             ldc.i4 0x00000001
             ldc.i4 0x55555555
-            ldc.i4 0x55555556
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x55555555
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 27
@@ -304,8 +304,8 @@
         TEST27:
             ldc.i4 0x00000001
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0xAAAAAAAB
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0xAAAAAAAA
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 28
@@ -314,8 +314,8 @@
         TEST28:
             ldc.i4 0x7FFFFFFF
             ldc.i4 0x80000000
-            ldc.i4 0xFFFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 29
@@ -324,8 +324,8 @@
         TEST29:
             ldc.i4 0x7FFFFFFF
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x7FFFFFFE
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000001
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 30
@@ -334,8 +334,8 @@
         TEST30:
             ldc.i4 0x7FFFFFFF
             ldc.i4 0x00000000
-            ldc.i4 0x7FFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 31
@@ -344,8 +344,8 @@
         TEST31:
             ldc.i4 0x7FFFFFFF
             ldc.i4 0x00000001
-            ldc.i4 0x80000000
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x7FFFFFFF
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 32
@@ -354,8 +354,8 @@
         TEST32:
             ldc.i4 0x7FFFFFFF
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0xFFFFFFFE
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000001
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 33
@@ -364,8 +364,8 @@
         TEST33:
             ldc.i4 0x7FFFFFFF
             ldc.i4 0x55555555
-            ldc.i4 0xD5555554
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x2AAAAAAB
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 34
@@ -374,8 +374,8 @@
         TEST34:
             ldc.i4 0x7FFFFFFF
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x2AAAAAA9
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x55555556
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 35
@@ -384,8 +384,8 @@
         TEST35:
             ldc.i4 0x55555555
             ldc.i4 0x80000000
-            ldc.i4 0xD5555555
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x80000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 36
@@ -394,8 +394,8 @@
         TEST36:
             ldc.i4 0x55555555
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x55555554
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0xAAAAAAAB
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 37
@@ -404,8 +404,8 @@
         TEST37:
             ldc.i4 0x55555555
             ldc.i4 0x00000000
-            ldc.i4 0x55555555
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 38
@@ -414,8 +414,8 @@
         TEST38:
             ldc.i4 0x55555555
             ldc.i4 0x00000001
-            ldc.i4 0x55555556
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x55555555
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 39
@@ -424,8 +424,8 @@
         TEST39:
             ldc.i4 0x55555555
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0xD5555554
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x2AAAAAAB
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 40
@@ -434,8 +434,8 @@
         TEST40:
             ldc.i4 0x55555555
             ldc.i4 0x55555555
-            ldc.i4 0xAAAAAAAA
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x38E38E39
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 41
@@ -444,8 +444,8 @@
         TEST41:
             ldc.i4 0x55555555
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0xFFFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x71C71C72
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 42
@@ -454,8 +454,8 @@
         TEST42:
             ldc.i4 0xAAAAAAAA
             ldc.i4 0x80000000
-            ldc.i4 0x2AAAAAAA
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 43
@@ -464,8 +464,8 @@
         TEST43:
             ldc.i4 0xAAAAAAAA
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0xAAAAAAA9
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x55555556
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 44
@@ -474,8 +474,8 @@
         TEST44:
             ldc.i4 0xAAAAAAAA
             ldc.i4 0x00000000
-            ldc.i4 0xAAAAAAAA
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x00000000
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 45
@@ -484,8 +484,8 @@
         TEST45:
             ldc.i4 0xAAAAAAAA
             ldc.i4 0x00000001
-            ldc.i4 0xAAAAAAAB
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0xAAAAAAAA
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 46
@@ -494,8 +494,8 @@
         TEST46:
             ldc.i4 0xAAAAAAAA
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x2AAAAAA9
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x55555556
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 47
@@ -504,8 +504,8 @@
         TEST47:
             ldc.i4 0xAAAAAAAA
             ldc.i4 0x55555555
-            ldc.i4 0xFFFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0x71C71C72
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
             ldc.i4 48
@@ -514,17 +514,17 @@
         TEST48:
             ldc.i4 0xAAAAAAAA
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x55555554
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            ldc.i4 0xE38E38E4
+            call bool ILConformance.Mul_I4_Conformance::Mul(int32,int32,int32)
             brfalse FAIL
 
         SUCCESS:
-            ldstr "Add_I4.il passed"
+            ldstr "Mul_I4.il passed"
             call void [mscorlib]System.Console::WriteLine(string)
             ret
 
         FAIL:
-            ldstr "Add_I4.il failed at test number: {0}"
+            ldstr "Mul_I4.il failed at test number: {0}"
             ldloc 0
             call void [mscorlib]System.Console::WriteLine(string, object)
             
