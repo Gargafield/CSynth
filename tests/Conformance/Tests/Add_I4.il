@@ -29,23 +29,33 @@
             .entrypoint
             .locals init (int32)
 
-            ldc.i4 1
+            ldc.i4 0
             stloc 0
 
-        TEST1:
+        TEST0:
             ldc.i4 0x80000000
             ldc.i4 0x80000000
             ldc.i4 0x00000000
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
-            
+
+            ldc.i4 1
+            stloc 0
+
+        TEST1:
+            ldc.i4 0x80000000
+            ldc.i4 0xFFFFFFFF
+            ldc.i4 0x7FFFFFFF
+            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
+            brfalse FAIL
+
             ldc.i4 2
             stloc 0
 
         TEST2:
             ldc.i4 0x80000000
-            ldc.i4 0xFFFFFFFF
-            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x00000000
+            ldc.i4 0x80000000
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -54,8 +64,8 @@
 
         TEST3:
             ldc.i4 0x80000000
-            ldc.i4 0x00000000
-            ldc.i4 0x80000000
+            ldc.i4 0x00000001
+            ldc.i4 0x80000001
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -64,8 +74,8 @@
 
         TEST4:
             ldc.i4 0x80000000
-            ldc.i4 0x00000001
-            ldc.i4 0x80000001
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0xFFFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -74,8 +84,8 @@
 
         TEST5:
             ldc.i4 0x80000000
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0xFFFFFFFF
+            ldc.i4 0x55555555
+            ldc.i4 0xD5555555
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -84,8 +94,8 @@
 
         TEST6:
             ldc.i4 0x80000000
-            ldc.i4 0x55555555
-            ldc.i4 0xD5555555
+            ldc.i4 0xAAAAAAAA
+            ldc.i4 0x2AAAAAAA
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -93,9 +103,9 @@
             stloc 0
 
         TEST7:
+            ldc.i4 0xFFFFFFFF
             ldc.i4 0x80000000
-            ldc.i4 0xAAAAAAAA
-            ldc.i4 0x2AAAAAAA
+            ldc.i4 0x7FFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -104,8 +114,8 @@
 
         TEST8:
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x80000000
-            ldc.i4 0x7FFFFFFF
+            ldc.i4 0xFFFFFFFF
+            ldc.i4 0xFFFFFFFE
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -114,8 +124,8 @@
 
         TEST9:
             ldc.i4 0xFFFFFFFF
+            ldc.i4 0x00000000
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0xFFFFFFFE
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -124,8 +134,8 @@
 
         TEST10:
             ldc.i4 0xFFFFFFFF
+            ldc.i4 0x00000001
             ldc.i4 0x00000000
-            ldc.i4 0xFFFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -134,8 +144,8 @@
 
         TEST11:
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x00000001
-            ldc.i4 0x00000000
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x7FFFFFFE
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -144,8 +154,8 @@
 
         TEST12:
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0x7FFFFFFE
+            ldc.i4 0x55555555
+            ldc.i4 0x55555554
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -154,8 +164,8 @@
 
         TEST13:
             ldc.i4 0xFFFFFFFF
-            ldc.i4 0x55555555
-            ldc.i4 0x55555554
+            ldc.i4 0xAAAAAAAA
+            ldc.i4 0xAAAAAAA9
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -163,9 +173,9 @@
             stloc 0
 
         TEST14:
-            ldc.i4 0xFFFFFFFF
-            ldc.i4 0xAAAAAAAA
-            ldc.i4 0xAAAAAAA9
+            ldc.i4 0x00000000
+            ldc.i4 0x80000000
+            ldc.i4 0x80000000
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -174,8 +184,8 @@
 
         TEST15:
             ldc.i4 0x00000000
-            ldc.i4 0x80000000
-            ldc.i4 0x80000000
+            ldc.i4 0xFFFFFFFF
+            ldc.i4 0xFFFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -184,8 +194,8 @@
 
         TEST16:
             ldc.i4 0x00000000
-            ldc.i4 0xFFFFFFFF
-            ldc.i4 0xFFFFFFFF
+            ldc.i4 0x00000000
+            ldc.i4 0x00000000
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -194,8 +204,8 @@
 
         TEST17:
             ldc.i4 0x00000000
-            ldc.i4 0x00000000
-            ldc.i4 0x00000000
+            ldc.i4 0x00000001
+            ldc.i4 0x00000001
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -204,8 +214,8 @@
 
         TEST18:
             ldc.i4 0x00000000
-            ldc.i4 0x00000001
-            ldc.i4 0x00000001
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x7FFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -214,8 +224,8 @@
 
         TEST19:
             ldc.i4 0x00000000
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x55555555
+            ldc.i4 0x55555555
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -224,8 +234,8 @@
 
         TEST20:
             ldc.i4 0x00000000
-            ldc.i4 0x55555555
-            ldc.i4 0x55555555
+            ldc.i4 0xAAAAAAAA
+            ldc.i4 0xAAAAAAAA
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -233,9 +243,9 @@
             stloc 0
 
         TEST21:
-            ldc.i4 0x00000000
-            ldc.i4 0xAAAAAAAA
-            ldc.i4 0xAAAAAAAA
+            ldc.i4 0x00000001
+            ldc.i4 0x80000000
+            ldc.i4 0x80000001
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -244,8 +254,8 @@
 
         TEST22:
             ldc.i4 0x00000001
-            ldc.i4 0x80000000
-            ldc.i4 0x80000001
+            ldc.i4 0xFFFFFFFF
+            ldc.i4 0x00000000
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -254,8 +264,8 @@
 
         TEST23:
             ldc.i4 0x00000001
-            ldc.i4 0xFFFFFFFF
             ldc.i4 0x00000000
+            ldc.i4 0x00000001
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -264,8 +274,8 @@
 
         TEST24:
             ldc.i4 0x00000001
-            ldc.i4 0x00000000
             ldc.i4 0x00000001
+            ldc.i4 0x00000002
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -274,8 +284,8 @@
 
         TEST25:
             ldc.i4 0x00000001
-            ldc.i4 0x00000001
-            ldc.i4 0x00000002
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x80000000
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -284,8 +294,8 @@
 
         TEST26:
             ldc.i4 0x00000001
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0x80000000
+            ldc.i4 0x55555555
+            ldc.i4 0x55555556
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -294,8 +304,8 @@
 
         TEST27:
             ldc.i4 0x00000001
-            ldc.i4 0x55555555
-            ldc.i4 0x55555556
+            ldc.i4 0xAAAAAAAA
+            ldc.i4 0xAAAAAAAB
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -303,9 +313,9 @@
             stloc 0
 
         TEST28:
-            ldc.i4 0x00000001
-            ldc.i4 0xAAAAAAAA
-            ldc.i4 0xAAAAAAAB
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x80000000
+            ldc.i4 0xFFFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -314,8 +324,8 @@
 
         TEST29:
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x80000000
             ldc.i4 0xFFFFFFFF
+            ldc.i4 0x7FFFFFFE
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -324,8 +334,8 @@
 
         TEST30:
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0xFFFFFFFF
-            ldc.i4 0x7FFFFFFE
+            ldc.i4 0x00000000
+            ldc.i4 0x7FFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -334,8 +344,8 @@
 
         TEST31:
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x00000000
-            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x00000001
+            ldc.i4 0x80000000
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -344,8 +354,8 @@
 
         TEST32:
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x00000001
-            ldc.i4 0x80000000
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0xFFFFFFFE
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -354,8 +364,8 @@
 
         TEST33:
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0xFFFFFFFE
+            ldc.i4 0x55555555
+            ldc.i4 0xD5555554
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -364,8 +374,8 @@
 
         TEST34:
             ldc.i4 0x7FFFFFFF
-            ldc.i4 0x55555555
-            ldc.i4 0xD5555554
+            ldc.i4 0xAAAAAAAA
+            ldc.i4 0x2AAAAAA9
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -373,9 +383,9 @@
             stloc 0
 
         TEST35:
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0xAAAAAAAA
-            ldc.i4 0x2AAAAAA9
+            ldc.i4 0x55555555
+            ldc.i4 0x80000000
+            ldc.i4 0xD5555555
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -384,8 +394,8 @@
 
         TEST36:
             ldc.i4 0x55555555
-            ldc.i4 0x80000000
-            ldc.i4 0xD5555555
+            ldc.i4 0xFFFFFFFF
+            ldc.i4 0x55555554
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -394,8 +404,8 @@
 
         TEST37:
             ldc.i4 0x55555555
-            ldc.i4 0xFFFFFFFF
-            ldc.i4 0x55555554
+            ldc.i4 0x00000000
+            ldc.i4 0x55555555
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -404,8 +414,8 @@
 
         TEST38:
             ldc.i4 0x55555555
-            ldc.i4 0x00000000
-            ldc.i4 0x55555555
+            ldc.i4 0x00000001
+            ldc.i4 0x55555556
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -414,8 +424,8 @@
 
         TEST39:
             ldc.i4 0x55555555
-            ldc.i4 0x00000001
-            ldc.i4 0x55555556
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0xD5555554
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -424,8 +434,8 @@
 
         TEST40:
             ldc.i4 0x55555555
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0xD5555554
+            ldc.i4 0x55555555
+            ldc.i4 0xAAAAAAAA
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -434,8 +444,8 @@
 
         TEST41:
             ldc.i4 0x55555555
-            ldc.i4 0x55555555
             ldc.i4 0xAAAAAAAA
+            ldc.i4 0xFFFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -443,9 +453,9 @@
             stloc 0
 
         TEST42:
-            ldc.i4 0x55555555
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0xFFFFFFFF
+            ldc.i4 0x80000000
+            ldc.i4 0x2AAAAAAA
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -454,8 +464,8 @@
 
         TEST43:
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x80000000
-            ldc.i4 0x2AAAAAAA
+            ldc.i4 0xFFFFFFFF
+            ldc.i4 0xAAAAAAA9
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -464,8 +474,8 @@
 
         TEST44:
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0xFFFFFFFF
-            ldc.i4 0xAAAAAAA9
+            ldc.i4 0x00000000
+            ldc.i4 0xAAAAAAAA
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -474,8 +484,8 @@
 
         TEST45:
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x00000000
-            ldc.i4 0xAAAAAAAA
+            ldc.i4 0x00000001
+            ldc.i4 0xAAAAAAAB
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -484,8 +494,8 @@
 
         TEST46:
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x00000001
-            ldc.i4 0xAAAAAAAB
+            ldc.i4 0x7FFFFFFF
+            ldc.i4 0x2AAAAAA9
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -494,8 +504,8 @@
 
         TEST47:
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x7FFFFFFF
-            ldc.i4 0x2AAAAAA9
+            ldc.i4 0x55555555
+            ldc.i4 0xFFFFFFFF
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
 
@@ -504,23 +514,10 @@
 
         TEST48:
             ldc.i4 0xAAAAAAAA
-            ldc.i4 0x55555555
-            ldc.i4 0xFFFFFFFF
-            call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
-            brfalse FAIL
-
-            ldc.i4 49
-            stloc 0
-
-        TEST49:
-            ldc.i4 0xAAAAAAAA
             ldc.i4 0xAAAAAAAA
             ldc.i4 0x55555554
             call bool ILConformance.Add_I4_Conformance::Add(int32,int32,int32)
             brfalse FAIL
-
-            ldc.i4 50
-            stloc 0
 
         SUCCESS:
             ldstr "Add_I4.il passed"
