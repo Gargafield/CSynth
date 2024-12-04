@@ -19,7 +19,6 @@ public class Compiler
     public List<Statement> Statements => Scopes.Peek().Statements;
     public Stack<Expression> Expressions => Scopes.Peek().Expressions;
     public Dictionary<string, TypeReference> Variables { get; } = new();
-    public HashSet<string> Locals { get; } = new();
 
     private Compiler(ControlTree tree, MethodDefinition method) {
         this.tree = tree;
@@ -150,7 +149,7 @@ public class Compiler
             var name = $"overflow_{i}";
             Statements.Add(new AssignmentStatement(name, new NullExpression()));
             Expressions.Push(new VariableExpression(name, expressionOverflow.ElementAt(i).Type));
-            Variables.Add(name, expressionOverflow.ElementAt(i).Type);
+            Variables[name] = expressionOverflow.ElementAt(i).Type;
         }
 
         foreach (var scope in scopes) {
@@ -428,17 +427,21 @@ public class Compiler
                 Expression expression = op switch {
                     Operator.Add => new AddSyscall(left, right),
                     Operator.Subtract => new SubSyscall(left, right),
+                    Operator.Multiply => new MulSyscall(left, right),
                     _ => new BinaryExpression(left, right, op, left.Type)
                 };
 
                 Expressions.Push(expression);
                 break;
             }
-            case Code.Not:
-            case Code.Neg: {
-                // TODO: Not and neg
+            case Code.Not: {
                 var value = Expressions.Pop();
                 Expressions.Push(new UnaryExpression(value, value.Type));
+                break;
+            }
+            case Code.Neg: {
+                var value = Expressions.Pop();
+                Expressions.Push(new NegSyscall(value));
                 break;
             }
             case Code.Dup: {

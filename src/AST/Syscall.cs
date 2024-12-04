@@ -8,7 +8,7 @@ public abstract class Syscall : Expression {
     public TypeReference Return => Type;
     public abstract IEnumerable<Expression> Arguments { get; }
 
-    public virtual string GetFullName() => Name;
+    public virtual string GetFullName() => $"{Name}_{TypeResolver.GetName(Type)}";
     public virtual Expression? Emit() => null;
 
     protected Syscall(TypeReference returnType) : base(returnType) { }
@@ -39,10 +39,6 @@ public class AddSyscall : Syscall {
 
         return null;
     }
-    public override string GetFullName()
-    {
-        return $"{Name}_{TypeResolver.GetName(Type)}";
-    }
 }
 
 public class SubSyscall : Syscall {
@@ -66,9 +62,50 @@ public class SubSyscall : Syscall {
 
         return null;
     }
-    public override string GetFullName()
-    {
-        return $"{Name}_{TypeResolver.GetName(Type)}";
+}
+
+public class MulSyscall : Syscall {
+    public override string Name => "mul";
+    public override IEnumerable<Expression> Arguments => [Left, Right];
+
+    public Expression Left { get; }
+    public Expression Right { get; }
+
+    public MulSyscall(Expression left, Expression right) : base(left.Type) {
+        Left = left;
+        Right = right;
+    }
+
+    public override string ToString() => $"{Left} * {Right}";
+    public override Expression? Emit() {
+        return null;
+    }
+}
+
+public class NegSyscall : Syscall {
+    public override string Name => "neg";
+    public override IEnumerable<Expression> Arguments => [Expression];
+
+    public Expression Expression { get; }
+
+    public NegSyscall(Expression expression) : base(expression.Type) {
+        Expression = expression;
+    }
+
+    public override string ToString() => $"-{Expression}";
+    public override Expression? Emit() {
+        if (Expression.Type.Name == "Int32") {
+            return new BinaryExpression(
+                new BinaryExpression(
+                    new BinaryExpression(Expression, null!, Operator.BitwiseNot, TypeResolver.Int32Type),
+                    new NumberExpression(1, TypeResolver.Int32Type),
+                    Operator.Add, Type
+                ),
+                new NumberExpression((long)0xFFFFFFFF, TypeResolver.Int32Type),
+                Operator.BitwiseAnd, Type);
+        }
+
+        return null;
     }
 }
 
@@ -91,10 +128,6 @@ public class EqSyscall : Syscall {
         }
 
         return null;
-    }
-    public override string GetFullName()
-    {
-        return $"{Name}_{TypeResolver.GetName(Type)}";
     }
 }
 
@@ -121,8 +154,5 @@ public class BoolSyscall : Syscall {
         }
 
         return null;
-    }
-    public override string GetFullName() {
-        return $"{Name}_{TypeResolver.GetName(Type)}";
     }
 }

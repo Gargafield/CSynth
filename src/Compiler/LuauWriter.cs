@@ -210,7 +210,7 @@ public class LuauWriter {
                 return "nil";
             case RuntimeMethodExpression runtimeMethod:
                 useRuntime = true;
-                return $"rt.{runtimeMethod.Method}";
+                return $"rt.{runtimeMethod.Method.Name}";
             case MethodExpression method:
                 return ImportMethod(method.Method);
             case LambdaExpression lambda:
@@ -273,7 +273,11 @@ public class LuauWriter {
     private string ProcessBinary(BinaryExpression binary) {
         if (BitwiseMap.ContainsKey(binary.Operator)) {
             var method = BitwiseMap[binary.Operator];
-            return $"bit32.{method}({ProcessExpression(binary.Left)}, {ProcessExpression(binary.Right)})";
+
+            if (binary.Operator == Operator.BitwiseNot)
+                return $"bit32.{method}({ProcessExpression(binary.Left)})";
+            else
+                return $"bit32.{method}({ProcessExpression(binary.Left)}, {ProcessExpression(binary.Right)})";
         }
 
         var op = OperatorMap[binary.Operator];

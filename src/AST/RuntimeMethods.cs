@@ -34,12 +34,18 @@ public class RuntimeMethodSignature : IMethodSignature
             _parameters.Add(parameter);
         }
     }
+
+    public override string ToString() => Name;
 }
 
 public static class RuntimeMethods {
-    public static RuntimeMethodSignature AddInt32 = new RuntimeMethodSignature("add_int32", TypeResolver.Int32Type, new ParameterDefinition(TypeResolver.Int32Type), new ParameterDefinition(TypeResolver.Int32Type));
-    
+    private static ParameterDefinition _int32Parameter = new ParameterDefinition(TypeResolver.Int32Type);
+
+    public static RuntimeMethodSignature AddInt32 = new RuntimeMethodSignature("add_Int32", TypeResolver.Int32Type, _int32Parameter, _int32Parameter);
+    public static RuntimeMethodSignature MulInt32 = new RuntimeMethodSignature("mul_Int32", TypeResolver.Int32Type, _int32Parameter, _int32Parameter);
+
     public static Dictionary<string, RuntimeMethodSignature> Methods = new() {
-        { "add_int32", AddInt32 }
+        { "add_Int32", AddInt32 },
+        { "mul_Int32", MulInt32 }
     };
 }
