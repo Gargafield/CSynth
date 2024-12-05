@@ -1,8 +1,7 @@
 ﻿using System.Text;
-using CSynth.AST;
 using Mono.Cecil;
 
-namespace CSynth.Compiler;
+namespace CSynth.Core;
 
 public class LuauWriter {
     public const string RuntimePath = "@lib/Runtime";
@@ -95,7 +94,7 @@ public class LuauWriter {
             ProcessStatement(statement);
         }
         indent--;
-        builder.AppendLine($"{IndentString}until {doWhile.Condition} == 0");
+        builder.AppendLine($"{IndentString}until not ({ProcessExpression(doWhile.Condition)})");
     }
 
     private void ProcessIf(IfStatement ifStatement) {

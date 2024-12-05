@@ -22,8 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include=".\..\..\src\AST\CSynth.AST.csproj" />
-    <ProjectReference Include=".\..\..\src\Compiler\CSynth.Compiler.csproj" />
+    <ProjectReference Include=".\..\..\src\Core\CSynth.Core.csproj" />
 
     <ProjectReference Include=".\Tests\ILConformance.ilproj" />
   </ItemGroup>

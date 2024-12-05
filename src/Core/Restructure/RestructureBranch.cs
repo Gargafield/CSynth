@@ -1,8 +1,7 @@
 ﻿
 using System.Buffers;
-using CSynth.AST;
 
-namespace CSynth.Transformation;
+namespace CSynth.Core;
 
 public class RestructureBranch
 {

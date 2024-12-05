@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public enum RegionId : uint { }
 

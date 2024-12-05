@@ -1,10 +1,7 @@
-﻿using CSynth.Analysis;
-using CSynth.AST;
-using CSynth.Transformation;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace CSynth.Compiler;
+namespace CSynth.Core;
 
 public class Scope {
     public List<Statement> Statements { get; } = new();
@@ -142,20 +139,22 @@ public class Compiler
 
     private void FixExpressionOverflows(IEnumerable<Scope> scopes) {
         var expressionOverflow = scopes.MaxBy(s => s.Expressions.Count)?.Expressions;
-        if (expressionOverflow == null || expressionOverflow.Count == 0)
+        var overflowCount = (expressionOverflow?.Count ?? 0) - Expressions.Count; 
+        if (expressionOverflow == null || overflowCount <= 0)
             return;
 
-        for (int i = 0; i < expressionOverflow.Count; i++) {
+        for (int i = 0; i < overflowCount; i++) {
             var name = $"overflow_{i}";
+            var element = expressionOverflow.ElementAt(expressionOverflow.Count - i - 1);
             Statements.Add(new AssignmentStatement(name, new NullExpression()));
-            Expressions.Push(new VariableExpression(name, expressionOverflow.ElementAt(i).Type));
-            Variables[name] = expressionOverflow.ElementAt(i).Type;
+            Expressions.Push(new VariableExpression(name, element.Type));
+            Variables[name] = element.Type;
         }
 
         foreach (var scope in scopes) {
             var expressions = scope.Expressions.ToList();
-            for (int i = 0; i < expressions.Count; i++) {
-                var expression = expressions[i];
+            for (int i = 0; i < Math.Min(expressions.Count, overflowCount); i++) {
+                var expression = expressions.ElementAt(i);
                 scope.Statements.Add(new AssignmentStatement($"overflow_{i}", expression));
             }
         }
@@ -293,7 +292,7 @@ public class Compiler
                 VariableDefinition variable = instruction.GetVariable(method.Body);
                 string name = $"local_{variable.Index}";
                 Expressions.Push(new VariableExpression(name, variable.VariableType));
-                Variables.Add(name, variable.VariableType);
+                Variables[name] = variable.VariableType;
                 break;
             }
             case Code.Ldsflda: {
@@ -420,9 +419,9 @@ public class Compiler
                 };
 
                 // TODO: Generate specaialized expressions for types
-                if (left.Type != right.Type) {
-                    throw new NotImplementedException("Type mismatch");
-                }
+                // if (left.Type != right.Type) {
+                //     throw new NotImplementedException("Type mismatch");
+                // }
 
                 Expression expression = op switch {
                     Operator.Add => new AddSyscall(left, right),

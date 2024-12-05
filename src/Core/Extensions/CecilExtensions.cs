@@ -1,9 +1,9 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace CSynth.Compiler;
+namespace CSynth.Core;
 
-public static class CecilExtensions {
+internal static class CecilExtensions {
     
     public static VariableDefinition GetVariable(this Instruction instruction, MethodBody method) {
         if (instruction.Operand is VariableDefinition variable) {

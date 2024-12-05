@@ -1,6 +1,5 @@
-﻿using CSynth.AST;
-
-namespace CSynth.Transformation;
+﻿
+namespace CSynth.Core;
 
 public static class Restructure {
     public static void RestructureCFG(CFG cfg) {

@@ -4,7 +4,7 @@ class Fibonacci
 {
     static void Main()
     {
-        int n = 50;
+        int n = 25;
         int[] fib = new int[n];
         fib[0] = 0;
         fib[1] = 1;

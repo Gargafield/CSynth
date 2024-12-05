@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public class ControlTree {
     private CFG cfg;

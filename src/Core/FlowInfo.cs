@@ -1,7 +1,6 @@
-﻿using CSynth.AST;
-using Mono.Cecil.Cil;
+﻿using Mono.Cecil.Cil;
 
-namespace CSynth.Analysis;
+namespace CSynth.Core;
 
 public class FlowInfo
 {

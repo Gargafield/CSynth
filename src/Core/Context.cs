@@ -1,6 +1,6 @@
 using Mono.Cecil;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public class MethodContext {
     public MethodDefinition Method { get; }

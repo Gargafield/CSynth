@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Mono.Cecil;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public abstract class Statement { }
 

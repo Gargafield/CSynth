@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Text;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public class CFG : IEnumerable<Block> {
     public BlockCollection Blocks { get; set; }

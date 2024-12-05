@@ -1,6 +1,4 @@
-﻿using CSynth.AST;
-using CSynth.Compiler;
-using CSynth.Transformation;
+﻿using CSynth.Core;
 using Mono.Cecil;
 
 namespace CSynth.CLI;
@@ -49,7 +47,7 @@ public class Program
 
             var moduleContext = new ModuleContext(type.Module, context);
             var typeContext = new TypeContext(type, context);
-            var _type = new Compiler.Type(typeContext);
+            var _type = new Core.Type(typeContext);
             Console.WriteLine(LuauWriter.Write(_type.Compile(), moduleContext));
         }
         else {

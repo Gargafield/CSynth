@@ -1,6 +1,8 @@
 
 using Mono.Cecil;
 
+namespace CSynth.Core;
+
 public static class TypeResolver {
     private static AssemblyDefinition _assembly = AssemblyDefinition.ReadAssembly(typeof(TypeResolver).Assembly.Location);
 

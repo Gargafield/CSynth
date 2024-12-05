@@ -1,5 +1,5 @@
 ﻿
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public abstract class Structure {
     public List<object> Children { get; set; } = new();

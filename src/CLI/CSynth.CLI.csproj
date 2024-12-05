@@ -8,10 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\CSynth.Analysis.csproj" />
-    <ProjectReference Include="..\AST\CSynth.AST.csproj" />
-    <ProjectReference Include="..\Compiler\CSynth.Compiler.csproj" />
+    <ProjectReference Include="..\Core\CSynth.Core.csproj" />
   </ItemGroup>
-  
 
 </Project>

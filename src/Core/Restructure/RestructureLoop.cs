@@ -1,6 +1,5 @@
-﻿using CSynth.AST;
-
-namespace CSynth.Transformation;
+﻿
+namespace CSynth.Core;
 
 public class RestructureLoop
 {

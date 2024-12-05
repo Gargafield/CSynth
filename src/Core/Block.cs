@@ -1,8 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
-using CSynth.AST;
 using Mono.Cecil.Cil;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public abstract class Block {
     public int Id { get; set; }

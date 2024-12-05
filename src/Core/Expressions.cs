@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public abstract class Expression
 {
@@ -225,7 +225,7 @@ public class IndexExpression : Reference
     public Reference Value { get; set; }
     public Expression Index { get; set; }
 
-    public IndexExpression(Reference value, Expression index) : base(value.Type) {
+    public IndexExpression(Reference value, Expression index) : base(value.Type.GetElementType()) {
         Value = value;
         Index = index;
     }

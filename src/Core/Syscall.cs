@@ -1,7 +1,7 @@
 
 using Mono.Cecil;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public abstract class Syscall : Expression {
     public abstract string Name { get; }
@@ -151,6 +151,8 @@ public class BoolSyscall : Syscall {
                 return new BinaryExpression(Expression, new NumberExpression(0, TypeResolver.Int32Type), Operator.NotEqual, TypeResolver.BoolType);
             case "Boolean":
                 return Expression;
+            case "Object":
+                return new BinaryExpression(Expression, new NullExpression(), Operator.NotEqual, TypeResolver.BoolType);
         }
 
         return null;

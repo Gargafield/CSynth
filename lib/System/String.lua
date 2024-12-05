@@ -5,7 +5,7 @@ local function isNullOrEmpty(value)
     return value == nil or value == ""
 end
 
-function String.Concat_6865052(str1, str2)
+function String.Concat_6867084(str1, str2)
     if isNullOrEmpty(str1) then
         if isNullOrEmpty(str2) then
             return ""
@@ -25,12 +25,12 @@ local function toHex(str)
     return table.concat(output)
 end
 
-function String.op_Equality_6861180(str1, str2)
+function String.op_Equality_6863212(str1, str2)
     if str1 == nil then
-        return str2 == nil and 1 or 0
+        return str2 == nil
     end
 
-    return str1 == str2 and 1 or 0
+    return str1 == str2
 end
 
 return String

@@ -1,7 +1,6 @@
 
 using System.Diagnostics;
-using CSynth.AST;
-using CSynth.Compiler;
+using CSynth.Core;
 using ILConformance;
 using Mono.Cecil;
 
@@ -24,7 +23,7 @@ public static class Runner {
             }
 
             var typeContext = new TypeContext(type, context);
-            var _type = new Compiler.Type(typeContext);
+            var _type = new Core.Type(typeContext);
             var statements = _type.Compile();
             
             var function = new MethodExpression(type.Methods.First(m => m.Name == "Main"));

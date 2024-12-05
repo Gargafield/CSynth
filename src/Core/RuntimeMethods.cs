@@ -2,7 +2,7 @@
 using Mono.Cecil;
 using Mono.Collections.Generic;
 
-namespace CSynth.AST;
+namespace CSynth.Core;
 
 public class RuntimeMethodSignature : IMethodSignature
 {

@@ -1,7 +1,6 @@
-using CSynth.AST;
 using Mono.Cecil;
 
-namespace CSynth.Compiler;
+namespace CSynth.Core;
 
 public class Module {
     public ModuleDefinition Definition { get; }
