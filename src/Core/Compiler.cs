@@ -23,24 +23,24 @@ public class Compiler
         Scopes.Push(new());
     }
 
-    public static List<Statement> Compile(MethodContext method) {
-        var flow = FlowInfo.From(method.Method.Body.Instructions);
+    public static List<Statement> Compile(MethodDefinition method, TranslationContext translation) {
+        var flow = FlowInfo.From(method.Body.Instructions);
 
-        if (method.TranslationContext.Debug) {
+        if (translation.Debug) {
             Console.WriteLine("CFG:");
             Console.WriteLine(flow.CFG.ToDot());
         }
 
         Restructure.RestructureCFG(flow.CFG);
 
-        if (method.TranslationContext.Debug) {
+        if (translation.Debug) {
             Console.WriteLine("CFG (restructured):");
             Console.WriteLine(flow.CFG.ToDot());
         }
 
         var tree = ControlTree.From(flow.CFG);
 
-        var compiler = new Compiler(tree, method.Method);
+        var compiler = new Compiler(tree, method);
         compiler.Compile();
 
         return compiler.Statements;

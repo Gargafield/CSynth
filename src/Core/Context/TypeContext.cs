@@ -2,17 +2,15 @@ using Mono.Cecil;
 
 namespace CSynth.Core;
 
-public class Type {
+public class TypeContext : ICompilableContext {
 
     public TypeDefinition Definition { get; }
-    public TranslationContext Context { get; }
 
-    public Type(TypeContext context) {
-        Definition = context.Type;
-        Context = context.TranslationContext;
+    public TypeContext(TypeDefinition definition) {
+        Definition = definition;
     }
 
-    public List<Statement> Compile() {
+    public List<Statement> Compile(TranslationContext translationContext) {
 
         var statements = new List<Statement>();
 
@@ -25,7 +23,7 @@ public class Type {
 
         foreach (var method in Definition.Methods) {
             if (!method.HasBody) continue;
-            var compiled = Compiler.Compile(new MethodContext(method, Context));
+            var compiled = Compiler.Compile(method, translationContext);
             
             statements.Add(new MethodDefinitionStatement(method, compiled));
         }

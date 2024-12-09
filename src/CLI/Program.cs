@@ -45,20 +45,16 @@ public class Program
                 return;
             }
 
-            var moduleContext = new ModuleContext(type.Module, context);
-            var typeContext = new TypeContext(type, context);
-            var _type = new Core.Type(typeContext);
-            Console.WriteLine(LuauWriter.Write(_type.Compile(), moduleContext));
+            var moduleContext = new ModuleContext(type.Module);
+            var typeContext = new TypeContext(type);
+            Console.WriteLine(LuauWriter.Write(typeContext.Compile(context), moduleContext));
         }
         else {
             var path = args[0];
             var assembly = AssemblyDefinition.ReadAssembly(path);
 
-            var moduleContext = new ModuleContext(assembly.MainModule, context);
-
-            var module = new Module(moduleContext);
-
-            Console.WriteLine(LuauWriter.Write(module.Compile(), moduleContext));
+            var moduleContext = new ModuleContext(assembly.MainModule);
+            Console.WriteLine(LuauWriter.Write(moduleContext.Compile(context), moduleContext));
         }
 
     }

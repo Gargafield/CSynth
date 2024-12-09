@@ -15,16 +15,15 @@ public static class Runner {
 
         var assemblyPath = typeof(Add_I4_Conformance).Assembly.Location;
         var assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
-        var moduleContext = new ModuleContext(assembly.MainModule, context);
+        var moduleContext = new ModuleContext(assembly.MainModule);
 
         foreach (var type in assembly.MainModule.Types) {
             if (!type.FullName.EndsWith("Conformance")) {
                 continue;
             }
 
-            var typeContext = new TypeContext(type, context);
-            var _type = new Core.Type(typeContext);
-            var statements = _type.Compile();
+            var typeContext = new TypeContext(type);
+            var statements = typeContext.Compile(context);
             
             var function = new MethodExpression(type.Methods.First(m => m.Name == "Main"));
             var expression = new CallExpression(function, new List<Expression>());
