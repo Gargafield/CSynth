@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
-using CSynth.AST;
-using CSynth.Transformation;
+using CSynth.Core;
 
 namespace CSynth.Bench;
 
