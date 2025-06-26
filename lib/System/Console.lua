@@ -3,32 +3,32 @@ local stdio = require("@lune/stdio")
 
 local Console = {}
 
-function Console.WriteLine_72092()
+function Console.WriteLine_0_()
     print()
 end
 
-function Console.WriteLine_72216(value)
+function Console.WriteLine_1_String(value: string)
     print(value)
 end
 
-function Console.WriteLine_72296(value)
+function Console.WriteLine_1_Int32(value)
     print(value)
 end
 
-function Console.WriteLine_72312(value, obj1)
+function Console.WriteLine_2_String_Object(value, obj1)
     print((string.gsub(value, "{0}", obj1)))
 end
 
-function Console.WriteLine_String_Object_Object(value, obj1, obj2)
+function Console.WriteLine_3_String_Object_Object(value, obj1, obj2)
     print((string.gsub(string.gsub(value, "{0}", obj1), "{1}", obj2)))
 end
 
-function Console.WriteLine_72344(value, obj1, obj2, obj3)
+function Console.WriteLine_4_String_Object_Object_Object(value, obj1, obj2, obj3)
     print((string.gsub(string.gsub(string.gsub(value, "{0}", obj1), "{1}", obj2), "{2}", obj3)))
 end
 
 local buf = {}
-function Console.ReadLine_72080()
+function Console.ReadLine_0_()
     local contents = stdio.readToEnd()
     if contents ~= nil then
         table.insert(buf, contents)

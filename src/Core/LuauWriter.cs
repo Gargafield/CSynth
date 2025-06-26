@@ -144,7 +144,7 @@ public class LuauWriter {
         builder.AppendLine($"{IndentString}end");
     }
 
-    private string[] badChars = new[] { "<", ">", "|", "`", "!" };
+    private string[] badChars = new[] { "<", ">", "|", "`", "!", "[", "]" };
 
     private string ReplaceBadChars(string name) {
         foreach (var c in badChars) {
@@ -182,7 +182,8 @@ public class LuauWriter {
         if (methodDef == null)
             return baseName;
 
-        return baseName + '_' + methodDef.RVA;
+        return baseName + '_' + methodDef.Parameters.Count + "_" + 
+               string.Join("_", methodDef.Parameters.Select(p => ReplaceBadChars(p.ParameterType.Name)));
     }
 
     private string EscapeString(string str) {

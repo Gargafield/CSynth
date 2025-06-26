@@ -2,7 +2,7 @@ local Object = require("@System/Object")
 local Console = require("@System/Console")
 Module = {}
 Fibonacci = {}
-function Fibonacci.Main_8272()
+function Fibonacci.Main_0_()
     local local_0, local_1, local_2, LoopControl, local_3
     local_0 = 0x19
     local_1 = table.create(local_0)
@@ -21,7 +21,7 @@ function Fibonacci.Main_8272()
     local_3 = 0x0
     repeat
         if local_3 < local_0 then
-            Console.WriteLine_72216(local_1[local_3]) -- System.Void System.Console::WriteLine(System.Int32)
+            Console.WriteLine_1_Int32(local_1[local_3]) -- System.Void System.Console::WriteLine(System.Int32)
             local_3 = bit32.bor(local_3 + 0x1, 0x0)
             LoopControl = 0x1
         else
@@ -30,9 +30,9 @@ function Fibonacci.Main_8272()
     until not (LoopControl ~= 0x0)
     return nil
 end
-function Fibonacci.new_8349(this)
-    Object.new_6832912(this) -- System.Void System.Object::.ctor()
+function Fibonacci.new_0_(this)
+    Object.new_0_(this) -- System.Void System.Object::.ctor()
     return nil
 end
-Fibonacci.Main_8272() -- System.Void Fibonacci::Main()
+Fibonacci.Main_0_() -- System.Void Fibonacci::Main()
 
